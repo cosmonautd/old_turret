@@ -3,6 +3,10 @@ People detection software written in Python, using openCV, based on turrets
 from the Portal games. It continuously scans the environment using image 
 processing and saves frames where humans are detected.
 
+Run with:
+
+        $ python turret.py
+
 
 This turret is able to save all people detections in a folder inside 
 your Google Drive account. If you want this functionality, you'll have to 
@@ -27,7 +31,7 @@ To use this project the following needs to be installed:
         $ sudo apt-get install python-opencv
     
     If your distro's repositories doesn't have an OpenCV version available, 
-    try a PPA:
+    try this PPA:
     
         $ sudo add-apt-repository ppa:alexei.colin/opencv
         $ sudo apt-get update
@@ -58,6 +62,7 @@ To use this project the following needs to be installed:
     gdata, you can try these links:
     
     https://pypi.python.org/pypi/gdata
+    
     https://code.google.com/p/gdata-python-client/downloads/list
 
 
