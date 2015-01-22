@@ -1,34 +1,119 @@
+"""
+Categorize and play sounds randomly, based on category.
+"""
 # coding: utf-8
-# soundcat class
-# Categorizes and play sounds randomly, based on category
 
 import pygame
 import random
 import os
 
-# Initialize pygame mixer
-pygame.mixer.init()
+class Soundcat(object):
+    """Categorize and play sounds randomly, based on category.
 
-class soundcat:
+        A Soundcat object plays a random sound from a given category.
+        In order to do this, the sounds from a specific category must
+        be in the same directory. You can add a category to a Soundcat
+        object with the add_category() method as in the example below,
+        where all sound files are in /home/user/music/hello_sounds.
+        
+        >> import soundcat;
+        >> sound = soundcat.Soundcat();
+        >> sound.add_category("Hello", "/home/user/songs/hello");
+        
+        For randomly playing a sound from an existing category, using
+        our example:
+        
+        >> sound.play("Hello sounds");
 
-    # Class constructor
+        Note: All audio files must be WAV.
+        
+        Attributes:
+            No public attributes.
+            
+    """
+
     def __init__(self):
-        self.categories = {};   # Defines an empty dictionary to connect the names of categories and its sounds
+        """Soundcat constructor.
+        
+            Args:
+                None.
+                
+            Returns:
+                A Soundcat object.
+            
+            Raises:
+                No information.
+            
+        """
+        
+        pygame.init()
+        pygame.mixer.init()
+        
+        # A dictionary to connect the names of categories and its sounds
+        self._categories = {};
     
-    # Method that adds a category
-    # Input : name of category and directory where its files are stored
-    # Output: none, sounds are added to the category's dictionary
+    
+    def quit(self):
+        """Quits safely.
+        
+            This method should be called before ending the program.
+            
+            Args:
+                None.
+            
+            Returns:
+                Nothing.
+            
+            Raises:
+                No information.
+            
+        """
+        
+        pygame.mixer.quit()
+    
+
     def add_category(self, category_name, directory):
-        self.categories[category_name] = directory;
+        """Adds a category.
+        
+            Args:
+                category_name: name of category.
+                directory: full path to the location where sounds are 
+                           stored.
+            
+            Returns:
+                Nothing.
+            
+            Raises:
+                No information.
+            
+        """
+        
+        # Link category name and path
+        self._categories[category_name] = directory;
     
-    # Method that plays a category's sound randomly
-    # Input : category's name
-    # Output: none, a sound is selected from the category and played
+    
     def play(self, category_name):
-        entries = os.listdir(self.categories[category_name]);
+        """Randomly play a sound from the specified category.
+        
+            Args:
+                category_name: name of category.
+            
+            Returns:
+                Nothing.
+            
+            Raises:
+                No information.
+            
+        """
+        
+        # Get all WAV files of specified category
+        entries = os.listdir(self._categories[category_name]);
         sounds = [];
         for entry in entries:
             if entry.endswith(".wav"):
                 sounds.append(entry);
-        sound = pygame.mixer.Sound(self.categories[category_name]+"/"+sounds[random.randrange(0, len(sounds))]);
+        
+        # Load one of the files randomly and play it
+        sound = pygame.mixer.Sound("/".join((self._categories[category_name], sounds[random.randrange(0, len(sounds))])));
         sound.play();
+    
