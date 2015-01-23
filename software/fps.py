@@ -14,7 +14,7 @@ class FpsCounter(object):
         
         Create a FpsCounter object.
         
-        >>> import soundcat;
+        >>> import fps;
         >>> fps_counter = fps.FpsCounter();
         
         Put the following line after a place in the code where you 
