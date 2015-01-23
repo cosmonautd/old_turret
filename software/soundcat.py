@@ -23,7 +23,7 @@ class Soundcat(object):
         For randomly playing a sound from an existing category, using
         our example:
         
-        >>> sound.play("Hello sounds");
+        >>> sound.play("Hello");
 
         Note: All audio files must be WAV.
         
