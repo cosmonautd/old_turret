@@ -20,6 +20,7 @@ import gtk
 import glib
 import imgutils
 import locale
+import fps
 
 
 # Parse command line arguments and set initial configuration
@@ -75,6 +76,10 @@ cascade_face = cv2.CascadeClassifier("haarcascades/haarcascade_frontalface_alt.x
 counter = 0     # Store total number of frames since start of execution
 dcounter = 0    # Stores number of the last frame where a detection was made
 LIMIT = 50      # Indicate limit of frames after the last detection in which we permit our turret to talk and save an image
+last_sec_frames = 0;
+
+# Build an FpsCounter object
+fps_counter = fps.FpsCounter();
 
 
 
@@ -87,6 +92,7 @@ def sigint_handler(signum, instant):
     """
 
     camera.release();
+    fps_counter.quit();
     if not args.silent:
         sound.play("close")
         time.sleep(3)
@@ -99,7 +105,9 @@ def on_delete_window(widget=None, *data):
         
         Close all cameras, windows, say goodbye!
     """
+    
     camera.release();
+    fps_counter.quit();
     if not args.silent:
         sound.play("close")
         time.sleep(3)
@@ -113,7 +121,7 @@ def on_delete_window(widget=None, *data):
 def set_frame():
     """Read a new frame from camera, process it, search for humans."""
     
-    global counter, dcounter, LIMIT
+    global counter, dcounter, LIMIT, last_sec_frames
     
     # Here, frames will be continuously captured and processed
     # Capture and apply some operations to captured frame before pattern detection
@@ -168,12 +176,18 @@ def set_frame():
     
     counter+=1;
     
+    # Write current FPS on screen
+    cv2.putText(frame, "FPS: {!s}".format(fps_counter.current_fps), (WIDTH-50,HEIGHT-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+    
     # If GUI is enabled, change image color model from BGR to RGB, convert to GTK compatible image, update frame.
     if not args.nogui:
         b, g, r = cv2.split(frame)
         frame_rgb = cv2.merge([r,g,b])
         pixbuf = gtk.gdk.pixbuf_new_from_array(frame_rgb, gtk.gdk.COLORSPACE_RGB, 8);
         image.set_from_pixbuf(pixbuf)
+        
+        # Inform our FPS counter that a new frame was set
+        fps_counter.update_frame_counter();
     
     return True;
 
@@ -214,7 +228,7 @@ if __name__ == '__main__':
         window.add(image)
         
         # Make our frame capturing and detection function execute whenever there are no higher priority events in main GTK loop
-        glib.idle_add(set_frame)
+        glib.idle_add(set_frame);
         
         # Show window, start GTK main loop
         window.show_all()

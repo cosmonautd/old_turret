@@ -14,16 +14,16 @@ class Soundcat(object):
         In order to do this, the sounds from a specific category must
         be in the same directory. You can add a category to a Soundcat
         object with the add_category() method as in the example below,
-        where all sound files are in /home/user/music/hello_sounds.
+        where all sound files are in /home/user/songs/hello.
         
-        >> import soundcat;
-        >> sound = soundcat.Soundcat();
-        >> sound.add_category("Hello", "/home/user/songs/hello");
+        >>> import soundcat;
+        >>> sound = soundcat.Soundcat();
+        >>> sound.add_category("Hello", "/home/user/songs/hello");
         
         For randomly playing a sound from an existing category, using
         our example:
         
-        >> sound.play("Hello sounds");
+        >>> sound.play("Hello sounds");
 
         Note: All audio files must be WAV.
         
