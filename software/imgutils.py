@@ -85,6 +85,39 @@ def rotate(img, degree):
     return cv2.warpAffine(img, M, (w, h))
 
 
+def resize(img, width=None, height=None):
+    """Resize an image.
+    
+        Args:
+            img: a cv2 image.
+            width: new width.
+            height: new height.
+        
+        Returns:
+            The input cv2 image, resized to new width and height.
+        
+        Raises:
+    
+    """
+    
+    # Get initial height and width
+    (h, w) = img.shape[:2];
+    
+    # If just one of the new size parameters is given, keep aspect ratio
+    if width and not height:
+        height = h*(100/w);
+    elif height and not width:
+        width = w*(100/h);
+    elif not height and not width:
+        return img;
+    
+    # Choose interpolation method based on type of operation, shrink or enlarge
+    if width*height < w*h:
+        return cv2.resize(img, (width, height), interpolation = cv2.INTER_AREA);
+    else:
+        return cv2.resize(img, (width, height), interpolation = cv2.INTER_LINEAR);
+
+
 def save(img, time, googledocs=None):
     """Save images to disc or a Google Drive account.
     
