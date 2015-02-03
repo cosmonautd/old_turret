@@ -185,9 +185,11 @@ def set_frame():
         frame_rgb = cv2.merge([r,g,b])
         pixbuf = gtk.gdk.pixbuf_new_from_array(frame_rgb, gtk.gdk.COLORSPACE_RGB, 8);
         image.set_from_pixbuf(pixbuf)
-        
-        # Inform our FPS counter that a new frame was set
-        fps_counter.update_frame_counter();
+    
+    # Inform our FPS counter that a frame has been processed
+    fps_counter.update_frame_counter();
+    print "\rFPS: {!s}".format(fps_counter.current_fps),
+    sys.stdout.flush()
     
     return True;
 
@@ -203,10 +205,11 @@ if __name__ == '__main__':
     
     # Activate capture of SIGINT (Ctrl-C)
     signal.signal(signal.SIGINT, sigint_handler)
-    print('Press Ctrl+C to finish')
     
     # Start a video capture from the first camera device found
     camera = cv2.VideoCapture(0)
+    print "\nCamera is ready"
+    print('Press Ctrl+C to finish')
     
     # Show GUI, if required.
     if args.nogui:
