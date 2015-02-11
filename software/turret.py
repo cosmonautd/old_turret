@@ -33,6 +33,7 @@ parser = argparse.ArgumentParser(description="People detection turret. Detects p
 parser.add_argument("-s", "--silent", help="Shut down the turret's sound modules.", action="store_true");
 parser.add_argument("-g", "--googledrive", help="Save a copy of detections in a folder inside your Google Drive account", action="store_true");
 parser.add_argument("-n", "--nogui", help="Doesn't show a graphical user interface.", action="store_true");
+parser.add_argument("-r", "--rotate", type=int, help="Rotate camera input counterclockwise")
 
 args = parser.parse_args();
 
@@ -128,6 +129,10 @@ def set_frame():
     ret ,frame = camera.read()                          # Capture a frame
     frame = cv2.resize(frame, (WIDTH, HEIGHT))          # Resize the frame
     #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)    # Apply a grayscale filter
+    
+    # Rotate image if required
+    if args.rotate:
+        frame = imgutils.rotate(frame, args.rotate);
     
     # Detect upperbodies in the frame and draw a green rectangle around it, if found
     (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (75,75))
