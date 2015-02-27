@@ -59,11 +59,21 @@ To use this project the following needs to be installed:
         $ sudo apt-get install python-gdata
         
     If the repositories of your distribution only have an older version of 
-    gdata, you can try these links:
+    gdata, you can try to install with python-pip:
     
-    https://pypi.python.org/pypi/gdata
+        $ sudo pip install gdata
+    
+    Or you can download and install python-gdata from the following list:
     
     https://code.google.com/p/gdata-python-client/downloads/list
+
+
+- GTK2:
+
+    Our GUI uses GTK. If you don't have these for Python, use:
+    
+        $ sudo apt-get install python-gtk2 gtk2-engines-pixbuf
+   
 
 
 Note: This code has been tested in Ubuntu 14.04 and Python 2.7.5.
