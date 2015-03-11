@@ -67,6 +67,8 @@ if args.googledrive:
 # Width and height of the frames our turret will process
 WIDTH  = 320;
 HEIGHT = 240;
+CV_WIDTH_ID  = 3;
+CV_HEIGHT_ID = 4;
 
 # Load Haar Cascade Classifiers for upperbody and face
 # We use classifiers commonly found in opencv packages
@@ -127,7 +129,6 @@ def set_frame():
     # Here, frames will be continuously captured and processed
     # Capture and apply some operations to captured frame before pattern detection
     ret ,frame = camera.read()                          # Capture a frame
-    frame = cv2.resize(frame, (WIDTH, HEIGHT))          # Resize the frame
     #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)    # Apply a grayscale filter
     
     # Rotate image if required
@@ -213,7 +214,11 @@ if __name__ == '__main__':
     
     # Start a video capture from the first camera device found
     camera = cv2.VideoCapture(0)
-    print "\nCamera is ready"
+    camera.set(CV_WIDTH_ID, WIDTH);
+    camera.set(CV_HEIGHT_ID, HEIGHT);
+
+    if not(camera == None):
+        print "\nCamera is ready"
     print('Press Ctrl+C to finish')
     
     # Show GUI, if required.
@@ -224,7 +229,7 @@ if __name__ == '__main__':
         # Create a GTK window, set icon, title, connect some functions to GUI elements
         window = gtk.Window()
         window.set_icon_from_file('icons/ic_camera_48px-128.png')
-        window.set_title("People Detection Turret")
+        window.set_title("Turret")
         window.connect("destroy", gtk.main_quit)
         window.connect("delete_event", on_delete_window)
         
