@@ -1,5 +1,5 @@
 """
-Upload images to a Google Drive account in a hierarchical time structure.
+Upload images to the cloud in a hierarchical time structure.
 """
 # coding: utf-8
 

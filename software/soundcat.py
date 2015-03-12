@@ -115,5 +115,5 @@ class Soundcat(object):
         
         # Load one of the files randomly and play it
         sound = pygame.mixer.Sound("/".join((self._categories[category_name], sounds[random.randrange(0, len(sounds))])));
-        sound.play();
+        sound.play()
     

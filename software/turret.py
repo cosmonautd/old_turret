@@ -11,7 +11,7 @@ import thread
 import signal
 import sys
 import soundcat
-import google
+import save
 import multiprocessing
 import getpass
 import argparse
@@ -58,7 +58,7 @@ if args.googledrive:
     passwd = getpass.getpass("Password: ");
     if gmail and passwd:
         print "Thank you. Activating..."
-        upload = google.GoogleDocs(gmail, passwd);
+        upload = save.GoogleDocs(gmail, passwd);
         passwd = None;
         drive_ok = True;
     else:
