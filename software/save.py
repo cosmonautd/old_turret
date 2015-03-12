@@ -9,6 +9,7 @@ Upload images to the cloud in a hierarchical time structure.
 from __future__ import division
 import os.path, atom.data, gdata.client, gdata.docs.client, gdata.docs.data
 import sys, time, mimetypes
+import socket
 
 class GoogleDocs(object):
     """Upload images to a Google Drive account in a time structure.
@@ -23,7 +24,7 @@ class GoogleDocs(object):
         >>> import google;
         >>> email = "username@gmail.com";
         >>> password = "yourpassword-becareful";
-        >>> googledocs = google.GoogleDocs(email, password);
+        >>> googledocs = save.GoogleDocs(email, password);
         >>> current_time = datetime.datetime.now();
         >>> folder_link = googledocs.get_link(current_time);
         >>> googledocs.save_img("path/to/image.jpg", folder_link);
@@ -78,16 +79,55 @@ class GoogleDocs(object):
                 No information.
                 
         """
-        # Find the detected/ folder
-        # Create a query matching exactly a title, and include collections
-        q = gdata.docs.client.DocsQuery(title='detected', title_exact='true', show_collections='true')
-        # Execute the query and get the first entry named "detected"
         try:
-            detected_folder = self._client.GetResources(q=q).entry[0]
-        # If detected/ is not found, create it and add the current year, month and day to the time hierarchy
-        except IndexError:
-            detected_folder = gdata.docs.data.Resource(type='folder', title='detected');
-            detected_folder = self._client.CreateResource(detected_folder);
+            # Find the detected/ folder
+            # Create a query matching exactly a title, and include collections
+            q = gdata.docs.client.DocsQuery(title='detected', title_exact='true', show_collections='true')
+            
+            # Execute the query and get the first entry named "detected"
+            try:
+                detected_folder = self._client.GetResources(q=q).entry[0]
+            # If detected/ is not found, create it and add the current year, month and day to the time hierarchy
+            except IndexError:
+                detected_folder = gdata.docs.data.Resource(type='folder', title='detected');
+                detected_folder = self._client.CreateResource(detected_folder);
+                year_folder = gdata.docs.data.Resource(type='folder', title=str(time.year));
+                year_folder = self._client.CreateResource(year_folder, collection=detected_folder);
+                month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
+                month_folder = self._client.CreateResource(month_folder, collection=year_folder);
+                day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
+                day_folder = self._client.CreateResource(day_folder, collection=month_folder);
+                return day_folder.get_resumable_create_media_link().href;
+                    
+            # If detected/ is found, search for the current year, month and day. Returns a link to the current day folder
+            contents_detected = self._client.GetResources(uri=detected_folder.content.src)
+            for year in contents_detected.entry:
+                if year.title.text == str(time.year):
+                    q2 = gdata.docs.client.DocsQuery(title=year.title.text, title_exact='true', show_collections='true');
+                    months = self._client.GetResources(q=q2).entry[0]
+                    contents_year = self._client.GetResources(uri=months.content.src)
+                    for month in contents_year.entry:
+                        if month.title.text == str(time.month) + ". " + time.strftime('%B') + " " + str(time.year):
+                            q3 = gdata.docs.client.DocsQuery(title=month.title.text, title_exact='true', show_collections='true');
+                            days = self._client.GetResources(q=q3).entry[0]
+                            contents_month = self._client.GetAllResources(uri=days.content.src)
+                            for day in contents_month:
+                                if day.title.text == str(time.day):
+                                    return day.get_resumable_create_media_link().href;
+                            
+                            # If current day folder not found, create it
+                            day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
+                            day_folder = self._client.CreateResource(day_folder, collection=month);
+                            return day_folder.get_resumable_create_media_link().href;
+                    
+                    # If current month folder not found, create it
+                    month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
+                    month_folder = self._client.CreateResource(month_folder, collection=year);
+                    day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
+                    day_folder = self._client.CreateResource(day_folder, collection=month_folder);
+                    return day_folder.get_resumable_create_media_link().href;
+                    
+            # If current year folder not found, create it
             year_folder = gdata.docs.data.Resource(type='folder', title=str(time.year));
             year_folder = self._client.CreateResource(year_folder, collection=detected_folder);
             month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
@@ -95,43 +135,10 @@ class GoogleDocs(object):
             day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
             day_folder = self._client.CreateResource(day_folder, collection=month_folder);
             return day_folder.get_resumable_create_media_link().href;
-                
-        # If detected/ is found, search for the current year, month and day. Returns a link to the current day folder
-        contents_detected = self._client.GetResources(uri=detected_folder.content.src)
-        for year in contents_detected.entry:
-            if year.title.text == str(time.year):
-                q2 = gdata.docs.client.DocsQuery(title=year.title.text, title_exact='true', show_collections='true');
-                months = self._client.GetResources(q=q2).entry[0]
-                contents_year = self._client.GetResources(uri=months.content.src)
-                for month in contents_year.entry:
-                    if month.title.text == str(time.month) + ". " + time.strftime('%B') + " " + str(time.year):
-                        q3 = gdata.docs.client.DocsQuery(title=month.title.text, title_exact='true', show_collections='true');
-                        days = self._client.GetResources(q=q3).entry[0]
-                        contents_month = self._client.GetAllResources(uri=days.content.src)
-                        for day in contents_month:
-                            if day.title.text == str(time.day):
-                                return day.get_resumable_create_media_link().href;
-                        
-                        # If current day folder not found, create it
-                        day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-                        day_folder = self._client.CreateResource(day_folder, collection=month);
-                        return day_folder.get_resumable_create_media_link().href;
-                
-                # If current month folder not found, create it
-                month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
-                month_folder = self._client.CreateResource(month_folder, collection=year);
-                day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-                day_folder = self._client.CreateResource(day_folder, collection=month_folder);
-                return day_folder.get_resumable_create_media_link().href;
-                
-        # If current year folder not found, create it
-        year_folder = gdata.docs.data.Resource(type='folder', title=str(time.year));
-        year_folder = self._client.CreateResource(year_folder, collection=detected_folder);
-        month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
-        month_folder = self._client.CreateResource(month_folder, collection=year_folder);
-        day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-        day_folder = self._client.CreateResource(day_folder, collection=month_folder);
-        return day_folder.get_resumable_create_media_link().href;
+        
+        except socket.gaierror:
+            pass;
+            
     
     
     def save_img(self, img_path, uri):
@@ -162,16 +169,20 @@ class GoogleDocs(object):
         file_type = mimetypes.guess_type(img_file.name)[0]
         
         # Make sure Google doesn't try to do any conversion on the upload (e.g. convert images to documents)
-        uri += '?convert=false'
+        if uri:
+            uri += '?convert=false'
 
-        # Create an uploader and upload the file
-        # Hint: it should be possible to use UploadChunk() to allow display of upload statistics for large uploads
-        t1 = time.time()
-        print 'Uploading file', img_path
-        uploader = gdata.client.ResumableUploader(self._client, img_file, file_type, file_size, chunk_size=1048576, desired_class=gdata.data.GDEntry)
-        new_entry = uploader.UploadFile(uri, entry=gdata.data.GDEntry(title=atom.data.Title(text=os.path.basename(img_file.name))))
-        # TODO: Uploading a file to drive sometimes results in strange error messages. Not fatal, but ugly. How to fix?
-        print 'Success uploading', img_path
-        print 'Uploaded', '{0:.2f}'.format(file_size / 1024 / 1024) + ' MiB in ' + str(round(time.time() - t1, 2)) + ' seconds'
+            # Create an uploader and upload the file
+            # Hint: it should be possible to use UploadChunk() to allow display of upload statistics for large uploads
+            t1 = time.time()
+            print 'Uploading file', img_path
+            uploader = gdata.client.ResumableUploader(self._client, img_file, file_type, file_size, chunk_size=1048576, desired_class=gdata.data.GDEntry)
+            try: 
+                new_entry = uploader.UploadFile(uri, entry=gdata.data.GDEntry(title=atom.data.Title(text=os.path.basename(img_file.name))))
+            except socket.gaierror:
+                print "Unknown error..."
+            # TODO: Uploading a file to drive sometimes results in strange error messages. Not fatal, but ugly. How to fix?
+            print 'Success uploading', img_path
+            print 'Uploaded', '{0:.2f}'.format(file_size / 1024 / 1024) + ' MiB in ' + str(round(time.time() - t1, 2)) + ' seconds'
 
 

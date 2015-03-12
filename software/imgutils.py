@@ -118,7 +118,7 @@ def resize(img, width=None, height=None):
         return cv2.resize(img, (width, height), interpolation = cv2.INTER_LINEAR);
 
 
-def save(img, time, googledocs=None):
+def save(img, img_time, googledocs=None):
     """Save images to disc or a Google Drive account.
     
         Save an image in a hierarchical structure inside the detected/ 
@@ -127,7 +127,7 @@ def save(img, time, googledocs=None):
         
         Args:
             img: a cv2 image.
-            time: the time of capture.
+            img_time: the time of capture.
             google: a GoogleDocs object.
         
         Returns:
@@ -137,28 +137,33 @@ def save(img, time, googledocs=None):
     """
 
 
-    if os.path.exists("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day)))):
-        cv2.imwrite("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day), str(time)[:19] + ".png")), img);
-    elif os.path.exists("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B')))):
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day))))
-        cv2.imwrite("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day), str(time)[:19] + ".png")), img);
-    elif os.path.exists("/".join(("detected", str(time.year)))):
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'))))
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day))))
-        cv2.imwrite("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day), str(time)[:19] + ".png")), img);
+    if os.path.exists("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day)))):
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    elif os.path.exists("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B')))):
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    elif os.path.exists("/".join(("detected", str(img_time.year)))):
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
     elif os.path.exists("detected"):
-        os.mkdir("/".join(("detected", str(time.year))))
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'))))
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day))))
-        cv2.imwrite("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day), str(time)[:19] + ".png")), img);
+        os.mkdir("/".join(("detected", str(img_time.year))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
     else:
         os.mkdir("detected")
-        os.mkdir("/".join(("detected", str(time.year))))
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'))))
-        os.mkdir("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day))))
-        cv2.imwrite("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day), str(time)[:19] + ".png")), img);
+        os.mkdir("/".join(("detected", str(img_time.year))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
     
     if googledocs:
-        upload_path = googledocs.get_link(time);
-        googledocs.save_img("/".join(("detected", str(time.year), str(time.month) + ". " + time.strftime('%B'), str(time.day), str(time)[:19] + ".png")), upload_path);
+        upload_path = None;
+        while not upload_path:
+            upload_path = googledocs.get_link(img_time);
+            time.sleep(5)
+        googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
+                            + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
+            
 

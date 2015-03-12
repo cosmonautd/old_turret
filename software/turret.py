@@ -21,6 +21,7 @@ import glib
 import imgutils
 import locale
 import fps
+import utils
 
 
 # Parse command line arguments and set initial configuration
@@ -84,7 +85,8 @@ last_sec_frames = 0;
 # Build an FpsCounter object
 fps_counter = fps.FpsCounter();
 
-
+# Internet connection status
+net_status = "OFF"
 
 # Some functions to handle OS signals and GUI events
 
@@ -117,6 +119,14 @@ def on_delete_window(widget=None, *data):
     sound.quit()
     return False
 
+# Update net connection status
+def update_net_status():
+    global net_status
+    if utils.internet_on():
+        net_status = "ON"
+    else: 
+        net_status = "OFF"
+    return True;
 
 
 # Detection and screen update function
@@ -194,7 +204,7 @@ def set_frame():
     
     # Inform our FPS counter that a frame has been processed
     fps_counter.update_frame_counter();
-    print "\rFPS: {!s}".format(fps_counter.current_fps),
+    print "\rFPS: {!s}".format(fps_counter.current_fps), "  INTERNET " + net_status + " ",
     sys.stdout.flush()
     
     return True;
@@ -221,6 +231,8 @@ if __name__ == '__main__':
         print "\nCamera is ready"
     print('Press Ctrl+C to finish')
     
+    update_net_status();
+    
     # Show GUI, if required.
     if args.nogui:
         while True:
@@ -241,6 +253,7 @@ if __name__ == '__main__':
         window.add(image)
         
         # Make our frame capturing and detection function execute whenever there are no higher priority events in main GTK loop
+        glib.timeout_add_seconds(5, update_net_status);
         glib.idle_add(set_frame);
         
         # Show window, start GTK main loop
