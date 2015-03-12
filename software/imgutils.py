@@ -7,7 +7,7 @@ import cv2
 import time
 import datetime
 import os
-import google
+import save
 
 
 def detect(img, cascade, min_rectangle):
