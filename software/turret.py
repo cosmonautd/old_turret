@@ -184,10 +184,10 @@ def set_frame():
                 sound.play("detection")     # i see you, there you are
             now = datetime.datetime.now()
             if drive_ok:
-                thread.start_new_thread( imgutils.save, (frame, now, upload) )   # another thread
+                thread.start_new_thread( save.save, (frame, now, upload) )   # another thread
                 #multiprocessing.Process( target=imgutils.save, args=(frame, now, upload)).start() # another process
             else:
-                thread.start_new_thread( imgutils.save, (frame, now) )   # another thread
+                thread.start_new_thread( save.save, (frame, now) )   # another thread
                 #multiprocessing.Process( target=imgutils.save, args=(frame, now)).start() # another process
     
     counter+=1;
