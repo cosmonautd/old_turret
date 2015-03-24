@@ -10,6 +10,56 @@ from __future__ import division
 import os.path, atom.data, gdata.client, gdata.docs.client, gdata.docs.data
 import sys, time, mimetypes
 import socket
+import cv2
+
+def save(img, img_time, googledocs=None):
+    """Save images to disc or a Google Drive account.
+    
+        Save an image in a hierarchical structure inside the detected/ 
+        folder -> year/month/day/image Additionally saves the image 
+        using a similar structure inside a Google Drive account, if set.
+        
+        Args:
+            img: a cv2 image.
+            img_time: the time of capture.
+            google: a GoogleDocs object.
+        
+        Returns:
+            
+        Raises:
+    
+    """
+
+
+    if os.path.exists("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day)))):
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    elif os.path.exists("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B')))):
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    elif os.path.exists("/".join(("detected", str(img_time.year)))):
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    elif os.path.exists("detected"):
+        os.mkdir("/".join(("detected", str(img_time.year))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    else:
+        os.mkdir("detected")
+        os.mkdir("/".join(("detected", str(img_time.year))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'))))
+        os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
+        cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
+    
+    if googledocs:
+        upload_path = None;
+        while not upload_path:
+            upload_path = googledocs.get_link(img_time);
+            time.sleep(5)
+        googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
+                            + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
+
 
 class GoogleDocs(object):
     """Upload images to a Google Drive account in a time structure.
