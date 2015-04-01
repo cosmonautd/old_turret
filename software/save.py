@@ -11,8 +11,9 @@ import os.path, atom.data, gdata.client, gdata.docs.client, gdata.docs.data
 import sys, time, mimetypes
 import socket
 import cv2
+from collections import deque
 
-def save(img, img_time, googledocs=None):
+def save(img, img_time, uploadqueue=None):
     """Save images to disc or a Google Drive account.
     
         Save an image in a hierarchical structure inside the detected/ 
@@ -52,13 +53,60 @@ def save(img, img_time, googledocs=None):
         os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
         cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
     
-    if googledocs:
-        upload_path = None;
-        while not upload_path:
-            upload_path = googledocs.get_link(img_time);
-            time.sleep(5)
-        googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
-                            + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
+    uploadqueue.append(img_time);
+
+class UploadQueue(object):
+    """Implements a queue of images for upload.
+    """
+
+    def __init__(self, googledocs):
+        """UploadQueue constructor.
+        
+            Args:
+                googledocs: a GoogleDocs object.
+            
+            Returns:
+            
+            Raises:
+            
+        """
+        self.uploadqueue = deque();
+        self.googledocs = googledocs;
+
+    def append(self, img_time):
+        """Append a new image for upload.
+        
+            Args:
+                img_time: a datetime object representing the time the frame was taken.
+            
+            Returns:
+            
+            Raises:
+            
+        """
+        self.uploadqueue.append(img_time);
+
+    def uploadloop(self):
+        """UploadQueue main method. Continuously uploads the first element of the queue.
+        
+            Args:
+            
+            Returns:
+            
+            Raises:
+            
+        """
+        ok = True;
+        while ok:
+            if self.googledocs and len(self.uploadqueue) > 0:
+                img_time = self.uploadqueue[0];
+                upload_path = None;
+                while not upload_path:
+                    upload_path = self.googledocs.get_link(img_time);
+                    time.sleep(1);
+                self.googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
+                                         + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
+                self.uploadqueue.popleft();
 
 
 class GoogleDocs(object):
@@ -71,7 +119,7 @@ class GoogleDocs(object):
         As this class uses old login methods, it may not be safe.
         This is a test only class. Usage example below:
         
-        >>> import google;
+        >>> import save;
         >>> email = "username@gmail.com";
         >>> password = "yourpassword-becareful";
         >>> googledocs = save.GoogleDocs(email, password);

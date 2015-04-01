@@ -62,6 +62,8 @@ if args.googledrive:
         upload = save.GoogleDocs(gmail, passwd);
         passwd = None;
         drive_ok = True;
+        uploadqueue = save.UploadQueue(upload);
+        thread.start_new_thread( uploadqueue.uploadloop, () )
     else:
         print "Ok. Blank data. Not connecting to Google."
 
@@ -184,8 +186,8 @@ def set_frame():
                 sound.play("detection")     # i see you, there you are
             now = datetime.datetime.now()
             if drive_ok:
-                thread.start_new_thread( save.save, (frame, now, upload) )   # another thread
-                #multiprocessing.Process( target=imgutils.save, args=(frame, now, upload)).start() # another process
+                thread.start_new_thread( save.save, (frame, now, uploadqueue) )   # another thread
+                #multiprocessing.Process( target=imgutils.save, args=(frame, now, uploadqueue)).start() # another process
             else:
                 thread.start_new_thread( save.save, (frame, now) )   # another thread
                 #multiprocessing.Process( target=imgutils.save, args=(frame, now)).start() # another process
