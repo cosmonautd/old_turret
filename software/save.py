@@ -100,13 +100,13 @@ class UploadQueue(object):
         while ok:
             if self.googledocs and len(self.uploadqueue) > 0:
                 img_time = self.uploadqueue[0];
+                self.uploadqueue.popleft();
                 upload_path = None;
                 while not upload_path:
                     upload_path = self.googledocs.get_link(img_time);
                     time.sleep(1);
                 self.googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
                                          + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
-                self.uploadqueue.popleft();
 
 
 class GoogleDocs(object):

@@ -63,6 +63,9 @@ if args.googledrive:
         passwd = None;
         drive_ok = True;
         uploadqueue = save.UploadQueue(upload);
+        # We use three threads to upload detections.
+        thread.start_new_thread( uploadqueue.uploadloop, () )
+        thread.start_new_thread( uploadqueue.uploadloop, () )
         thread.start_new_thread( uploadqueue.uploadloop, () )
     else:
         print "Ok. Blank data. Not connecting to Google."
