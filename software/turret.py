@@ -151,7 +151,7 @@ def set_frame():
         frame = imgutils.rotate(frame, args.rotate);
     
     # Detect upperbodies in the frame and draw a green rectangle around it, if found
-    (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (75,75))
+    (rects_upperbody, frame) = imgutils.detect(frame, cascade_face, (75,75))
     frame = imgutils.box(rects_upperbody, frame)
     
     # Get current time and date, writes it to image.
