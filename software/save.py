@@ -53,7 +53,8 @@ def save(img, img_time, uploadqueue=None):
         os.mkdir("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day))))
         cv2.imwrite("/".join(("detected", str(img_time.year), str(img_time.month) + ". " + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), img);
     
-    uploadqueue.append(img_time);
+    if uploadqueue:
+        uploadqueue.append(img_time);
 
 class UploadQueue(object):
     """Implements a queue of images for upload.
