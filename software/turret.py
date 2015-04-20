@@ -80,6 +80,9 @@ CV_HEIGHT_ID = 4;
 if args.rotate: ROTATION = args.rotate;
 else: ROTATION = None;
 
+if args.silent: SILENT = True;
+else: SILENT = False;
+
 # Load Haar Cascade Classifiers for upperbody and face
 # We use classifiers commonly found in opencv packages
 cascade_upperbody = cv2.CascadeClassifier("haarcascades/haarcascade_mcs_upperbody.xml")
@@ -104,10 +107,10 @@ def sigint_handler(signum, instant):
         
         Close all cameras, windows, say goodbye!
     """
-
+    global SILENT;
     camera.release();
     fps_counter.quit();
-    if not args.silent:
+    if not SILENT:
         sound.play("close")
         time.sleep(3)
     sound.quit()
@@ -138,7 +141,7 @@ class Gui:
             self.MainWindow.connect("delete_event", self.delete_event)
             self.MainWindow.connect("destroy", gtk.main_quit)
             
-            # Create a Box to containt all widgets
+            # Create a Box to contain all widgets
             self.MainBox = gtk.HBox(False, 0);
             self.MainWindow.add(self.MainBox)
             
@@ -223,6 +226,33 @@ class Gui:
             self.PanelBox.pack_start(separator, False, True, 5)
             
             
+            # More options panel
+            self.MoreOptionsPanel = gtk.VBox(False, 0)
+            self.PanelBox.pack_start(self.MoreOptionsPanel, False, True, 0);
+            
+            label = gtk.Label('More options')
+            label.set_justify(gtk.JUSTIFY_LEFT)
+            lalign = gtk.Alignment(0, 0.1, 0, 0.1)
+            lalign.add(label)
+            self.MoreOptionsPanel.pack_start(lalign, True, False, 0)
+            
+            self.MoreOptions = gtk.HBox(False, 0)
+            self.MoreOptionsPanel.pack_start(self.MoreOptions, True, True, 0)
+            
+            button = gtk.CheckButton("Silent")
+            button.connect("toggled", self.on_sound_option_toggled)
+            button.set_active(SILENT)
+            self.MoreOptions.pack_start(button, True, True, 0)
+
+            button = gtk.CheckButton("Save to Drive")
+            button.connect("toggled", self.on_save_to_drive_toggled)
+            button.set_active(args.googledrive)
+            self.MoreOptions.pack_start(button, True, True, 0)
+            
+            separator = gtk.HSeparator()
+            self.PanelBox.pack_start(separator, False, True, 5)
+
+            
             separator = gtk.VSeparator()
             self.MainBox.pack_start(separator, False, True, 5)
             
@@ -244,15 +274,22 @@ class Gui:
         global ROTATION
         ROTATION = data;
     
+    def on_sound_option_toggled(self, button):
+        global SILENT
+        SILENT = button.get_active();
+    
+    def on_save_to_drive_toggled(self, button):
+        pass;
+    
     def delete_event(widget=None, *data):
         """Quit safely when GTK window is closed.
             
             Close all cameras, windows, say goodbye!
         """
-        
+        global SILENT
         camera.release();
         fps_counter.quit();
-        if not args.silent:
+        if not SILENT:
             sound.play("close")
             time.sleep(3)
         sound.quit()
@@ -264,7 +301,7 @@ class Gui:
     def set_frame(self):
         """Read a new frame from camera, process it, search for humans."""
         
-        global counter, dcounter, LIMIT, last_sec_frames, WIDTH, HEIGHT, ROTATION
+        global counter, dcounter, LIMIT, last_sec_frames, WIDTH, HEIGHT, ROTATION, SILENT
         
         # Here, frames will be continuously captured and processed
         # Capture and apply some operations to captured frame before pattern detection
@@ -310,7 +347,7 @@ class Gui:
             # Verify if it is time for our turret to speak and save a frame
             if len(rects_face) > 0 and counter - dcounter > LIMIT:
                 dcounter = counter
-                if not args.silent:
+                if not SILENT:
                     sound.play("detection")     # i see you, there you are
                 now = datetime.datetime.now()
                 if drive_ok:
@@ -345,7 +382,7 @@ class Gui:
 if __name__ == '__main__':
 
     # The detector turret says Hello!
-    if not args.silent:
+    if not SILENT:
         sound.play("init")
     
     # Activate capture of SIGINT (Ctrl-C)
