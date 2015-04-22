@@ -22,6 +22,7 @@ import imgutils
 import locale
 import fps
 import utils
+import gobject
 
 
 # Parse command line arguments and set initial configuration
@@ -119,14 +120,11 @@ def sigint_handler(signum, instant):
 # Update net connection status
 def update_net_status():
     global net_status
-    if utils.internet_on():
-        net_status = "ON"
-    else: 
-        net_status = "OFF"
-    return True;
-
-
-
+    while True:
+        if utils.internet_on():
+            net_status = "ON"
+        else: 
+            net_status = "OFF"
 
 
 class Gui:
@@ -260,7 +258,6 @@ class Gui:
             self.MainWindow.show_all()
         
         # Make our frame capturing and detection function execute whenever there are no higher priority events in main GTK loop
-        glib.timeout_add_seconds(5, update_net_status);
         glib.idle_add(self.set_frame);
     
     
@@ -397,10 +394,11 @@ if __name__ == '__main__':
         print "\nCamera is ready"
     print('Press Ctrl+C to finish')
     
-    update_net_status();
+    # Start the connection verification thread
+    thread.start_new_thread( update_net_status, () )
     
     g = Gui();
-    
+    gobject.threads_init()
     # Start GTK main loop
     gtk.main()
     
