@@ -127,7 +127,7 @@ def update_net_status():
             net_status = "OFF"
 
 
-class Gui:
+class MainGUI:
     
     def __init__(self):
         if not args.nogui:
@@ -136,6 +136,7 @@ class Gui:
             self.MainWindow.set_icon_from_file('icons/ic_camera_48px-128.png')
             self.MainWindow.set_title("Turret")
             self.MainWindow.set_resizable(False)
+            self.MainWindow.set_position(gtk.WIN_POS_CENTER)
             self.MainWindow.connect("delete_event", self.delete_event)
             self.MainWindow.connect("destroy", gtk.main_quit)
             
@@ -276,7 +277,47 @@ class Gui:
         SILENT = button.get_active();
     
     def on_save_to_drive_toggled(self, button):
-        pass;
+        label = gtk.Label("\nThis turret is able to save all people detections\nin a folder inside your Google Drive account."
+                              "\n\nIf you want this functionality, please input your\nlogin data here. Else, leave both blank."
+                              "\n\nAs we're using a somewhat old login method, Google\nwill block this application by default.\n"
+                              "\nTo enable Google Drive, visit:"
+                              "\nhttps://www.google.com/settings/security/lesssecureapps"
+                              "\nand enable access for less secure apps.\n"
+                              "\nPlease, do not input your login data if you do not \ntrust this program. Check our code, so you can trust it.\n")
+        
+        dialog = gtk.Dialog("Enter password",
+                           None,
+                           gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                           (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                            gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        dialog.set_border_width(5)
+        dialog.vbox.pack_start(label)
+        label.show()
+        
+        label = gtk.Label("Google Account")
+        label.set_justify(gtk.JUSTIFY_LEFT)
+        lalign = gtk.Alignment(0, 0.5, 0, 0.5)
+        lalign.add(label)
+        dialog.vbox.pack_start(lalign, True, True, 0)
+        
+        entry = gtk.Entry(max=40)
+        dialog.vbox.pack_start(entry, False, True, 0)
+        
+        label = gtk.Label("Password")
+        label.set_justify(gtk.JUSTIFY_LEFT)
+        lalign = gtk.Alignment(0, 0.1, 0, 0.1)
+        lalign.add(label)
+        dialog.vbox.pack_start(lalign, True, True, 0)
+        
+        entry = gtk.Entry(max=50)
+        entry.set_visibility(False)
+        dialog.vbox.pack_start(entry, True, True, 0)
+        
+        dialog.vbox.show_all()
+        
+        response = dialog.run()
+        dialog.destroy()
+
     
     def delete_event(widget=None, *data):
         """Quit safely when GTK window is closed.
@@ -397,7 +438,7 @@ if __name__ == '__main__':
     # Start the connection verification thread
     thread.start_new_thread( update_net_status, () )
     
-    g = Gui();
+    mg = MainGUI();
     gobject.threads_init()
     # Start GTK main loop
     gtk.main()
