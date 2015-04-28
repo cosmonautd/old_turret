@@ -3,8 +3,7 @@ import socket
 
 def internet_on():
     try:
-        response=urllib2.urlopen('https://duckduckgo.com',timeout=0.2)
+        response=urllib2.urlopen('https://duckduckgo.com',timeout=0.5)
         return True
-    except urllib2.URLError as err: pass
-    except socket.timeout as err: pass
+    except: pass
     return False
