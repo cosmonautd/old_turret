@@ -46,8 +46,11 @@ sound.add_category("init", os.getcwd() + "/sounds/init");
 sound.add_category("detection", os.getcwd() + "/sounds/detection");
 sound.add_category("close", os.getcwd() + "/sounds/close");
 
+UPLOAD = None
+UPLOAD_QUEUE = None
+SAVE_TO_DRIVE = False
+
 # GoogleDocs class object creation
-drive_ok = False;
 if args.googledrive:
     print "\nThis turret is able to save all people detections in a folder inside your Google Drive account."
     print "If you want this functionality, please input your login data here. Else, leave both blank."
@@ -60,14 +63,14 @@ if args.googledrive:
     passwd = getpass.getpass("Password: ");
     if gmail and passwd:
         print "Thank you. Activating..."
-        upload = save.GoogleDocs(gmail, passwd);
+        UPLOAD = save.GoogleDocs(gmail, passwd);
         passwd = None;
-        drive_ok = True;
-        uploadqueue = save.UploadQueue(upload);
+        SAVE_TO_DRIVE = True;
+        UPLOAD_QUEUE = save.UploadQueue(UPLOAD);
         # We use three threads to upload detections.
-        thread.start_new_thread( uploadqueue.uploadloop, () )
-        thread.start_new_thread( uploadqueue.uploadloop, () )
-        thread.start_new_thread( uploadqueue.uploadloop, () )
+        thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
+        thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
+        thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
     else:
         print "Ok. Blank data. Not connecting to Google."
 
@@ -243,10 +246,10 @@ class MainGUI:
             button.set_active(SILENT)
             self.MoreOptions.pack_start(button, True, True, 0)
 
-            button = gtk.CheckButton("Save to Drive")
-            button.connect("toggled", self.on_save_to_drive_toggled)
-            button.set_active(args.googledrive)
-            self.MoreOptions.pack_start(button, True, True, 0)
+            self.save_to_drive_button = gtk.CheckButton("Save to Drive")
+            self.save_to_drive_button.connect("toggled", self.on_save_to_drive_toggled)
+            self.save_to_drive_button.set_active(args.googledrive)
+            self.MoreOptions.pack_start(self.save_to_drive_button, True, True, 0)
             
             separator = gtk.HSeparator()
             self.PanelBox.pack_start(separator, False, True, 5)
@@ -291,8 +294,8 @@ class MainGUI:
             dialog = gtk.Dialog("Enter password",
                                None,
                                gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                               (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                                gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                gtk.STOCK_OK, gtk.RESPONSE_OK))
             dialog.set_border_width(5)
             dialog.vbox.pack_start(label)
             label.show()
@@ -303,8 +306,8 @@ class MainGUI:
             lalign.add(label)
             dialog.vbox.pack_start(lalign, True, True, 0)
             
-            entry = gtk.Entry(max=40)
-            dialog.vbox.pack_start(entry, False, True, 0)
+            entry_email = gtk.Entry(max=40)
+            dialog.vbox.pack_start(entry_email, False, True, 0)
             
             label = gtk.Label("Password")
             label.set_justify(gtk.JUSTIFY_LEFT)
@@ -312,23 +315,43 @@ class MainGUI:
             lalign.add(label)
             dialog.vbox.pack_start(lalign, True, True, 0)
             
-            entry = gtk.Entry(max=50)
-            entry.set_visibility(False)
-            dialog.vbox.pack_start(entry, True, True, 0)
+            entry_passwd = gtk.Entry(max=50)
+            entry_passwd.set_visibility(False)
+            dialog.vbox.pack_start(entry_passwd, True, True, 0)
             
             dialog.vbox.show_all()
             
             response = dialog.run()
             
             if response == gtk.RESPONSE_OK:
-                pass
+                gmail  = entry_email.get_text();
+                passwd = entry_passwd.get_text();
+                if gmail and passwd:
+                    global UPLOAD, UPLOAD_QUEUE, SAVE_TO_DRIVE;
+                    print "Thank you. Activating..."
+                    UPLOAD = save.GoogleDocs(gmail, passwd);
+                    passwd = None;
+                    SAVE_TO_DRIVE = True;
+                    UPLOAD_QUEUE = save.UploadQueue(UPLOAD);
+                    # We use three threads to upload detections.
+                    thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
+                    thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
+                    thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
+                else:
+                    print "STRANGE ERROR. CHECK IT."
+                self.save_to_drive_button.set_active(True)
             elif response == gtk.RESPONSE_CANCEL:
                 pass
             
             dialog.destroy()
         
         else:
-            pass
+            global UPLOAD, UPLOAD_QUEUE, SAVE_TO_DRIVE;
+            UPLOAD = None;
+            UPLOAD_QUEUE.quit();
+            UPLOAD_QUEUE = None;
+            SAVE_TO_DRIVE = False;
+            self.save_to_drive_button.set_active(False)
 
     
     def delete_event(widget=None, *data):
@@ -351,7 +374,7 @@ class MainGUI:
     def set_frame(self):
         """Read a new frame from camera, process it, search for humans."""
         
-        global counter, dcounter, LIMIT, last_sec_frames, WIDTH, HEIGHT, ROTATION, SILENT
+        global counter, dcounter, LIMIT, last_sec_frames, WIDTH, HEIGHT, ROTATION, SILENT, SAVE_TO_DRIVE
         
         # Here, frames will be continuously captured and processed
         # Capture and apply some operations to captured frame before pattern detection
@@ -400,8 +423,8 @@ class MainGUI:
                 if not SILENT:
                     sound.play("detection")     # i see you, there you are
                 now = datetime.datetime.now()
-                if drive_ok:
-                    thread.start_new_thread( save.save, (frame, now, uploadqueue) )   # another thread
+                if SAVE_TO_DRIVE:
+                    thread.start_new_thread( save.save, (frame, now, UPLOAD_QUEUE) )   # another thread
                     #multiprocessing.Process( target=imgutils.save, args=(frame, now, uploadqueue)).start() # another process
                 else:
                     thread.start_new_thread( save.save, (frame, now) )   # another thread

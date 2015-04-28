@@ -73,6 +73,7 @@ class UploadQueue(object):
         """
         self.uploadqueue = deque();
         self.googledocs = googledocs;
+        self.running = True;
 
     def append(self, img_time):
         """Append a new image for upload.
@@ -97,8 +98,7 @@ class UploadQueue(object):
             Raises:
             
         """
-        ok = True;
-        while ok:
+        while self.running and self.googledocs:
             if self.googledocs and len(self.uploadqueue) > 0:
                 img_time = self.uploadqueue[0];
                 self.uploadqueue.popleft();
@@ -106,8 +106,14 @@ class UploadQueue(object):
                 while not upload_path:
                     upload_path = self.googledocs.get_link(img_time);
                     time.sleep(1);
-                self.googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
+                if self.googledocs:
+                    self.googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
                                          + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
+                                         
+    def quit(self):
+        self.googledocs = None;
+        self.running = False;
+        
 
 
 class GoogleDocs(object):
