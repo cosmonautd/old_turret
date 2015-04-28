@@ -55,7 +55,7 @@ if args.googledrive:
     print "To enable Google Drive, visit:"
     print "https://www.google.com/settings/security/lesssecureapps"
     print "and enable access for less secure apps.\n"
-    print "Please, do not input your login data if you do not trust this program. Check our code, so you can trust it.\n"
+    print "Please, do not input your login data if you do not trust this program. Check the code, so you can trust it.\n"
     gmail  = raw_input("Gmail account: ");
     passwd = getpass.getpass("Password: ");
     if gmail and passwd:
@@ -277,46 +277,58 @@ class MainGUI:
         SILENT = button.get_active();
     
     def on_save_to_drive_toggled(self, button):
-        label = gtk.Label("\nThis turret is able to save all people detections\nin a folder inside your Google Drive account."
-                              "\n\nIf you want this functionality, please input your\nlogin data here. Else, leave both blank."
-                              "\n\nAs we're using a somewhat old login method, Google\nwill block this application by default.\n"
-                              "\nTo enable Google Drive, visit:"
-                              "\nhttps://www.google.com/settings/security/lesssecureapps"
-                              "\nand enable access for less secure apps.\n"
-                              "\nPlease, do not input your login data if you do not \ntrust this program. Check our code, so you can trust it.\n")
+    
+        if button.get_active():
+    
+            label = gtk.Label("\nThis turret is able to save all people detections\nin a folder inside your Google Drive account."
+                                  "\n\nIf you want this functionality, please input your\nlogin data here. Else, leave both blank."
+                                  "\n\nAs we're using a somewhat old login method, Google\nwill block this application by default.\n"
+                                  "\nTo enable Google Drive, visit:"
+                                  "\nhttps://www.google.com/settings/security/lesssecureapps"
+                                  "\nand enable access for less secure apps.\n"
+                                  "\nPlease, do not input your login data if you do not \ntrust this program. Check our code, so you can trust it.\n")
+            
+            dialog = gtk.Dialog("Enter password",
+                               None,
+                               gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                               (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                                gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+            dialog.set_border_width(5)
+            dialog.vbox.pack_start(label)
+            label.show()
+            
+            label = gtk.Label("Google Account")
+            label.set_justify(gtk.JUSTIFY_LEFT)
+            lalign = gtk.Alignment(0, 0.5, 0, 0.5)
+            lalign.add(label)
+            dialog.vbox.pack_start(lalign, True, True, 0)
+            
+            entry = gtk.Entry(max=40)
+            dialog.vbox.pack_start(entry, False, True, 0)
+            
+            label = gtk.Label("Password")
+            label.set_justify(gtk.JUSTIFY_LEFT)
+            lalign = gtk.Alignment(0, 0.1, 0, 0.1)
+            lalign.add(label)
+            dialog.vbox.pack_start(lalign, True, True, 0)
+            
+            entry = gtk.Entry(max=50)
+            entry.set_visibility(False)
+            dialog.vbox.pack_start(entry, True, True, 0)
+            
+            dialog.vbox.show_all()
+            
+            response = dialog.run()
+            
+            if response == gtk.RESPONSE_OK:
+                pass
+            elif response == gtk.RESPONSE_CANCEL:
+                pass
+            
+            dialog.destroy()
         
-        dialog = gtk.Dialog("Enter password",
-                           None,
-                           gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                           (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                            gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        dialog.set_border_width(5)
-        dialog.vbox.pack_start(label)
-        label.show()
-        
-        label = gtk.Label("Google Account")
-        label.set_justify(gtk.JUSTIFY_LEFT)
-        lalign = gtk.Alignment(0, 0.5, 0, 0.5)
-        lalign.add(label)
-        dialog.vbox.pack_start(lalign, True, True, 0)
-        
-        entry = gtk.Entry(max=40)
-        dialog.vbox.pack_start(entry, False, True, 0)
-        
-        label = gtk.Label("Password")
-        label.set_justify(gtk.JUSTIFY_LEFT)
-        lalign = gtk.Alignment(0, 0.1, 0, 0.1)
-        lalign.add(label)
-        dialog.vbox.pack_start(lalign, True, True, 0)
-        
-        entry = gtk.Entry(max=50)
-        entry.set_visibility(False)
-        dialog.vbox.pack_start(entry, True, True, 0)
-        
-        dialog.vbox.show_all()
-        
-        response = dialog.run()
-        dialog.destroy()
+        else:
+            pass
 
     
     def delete_event(widget=None, *data):
