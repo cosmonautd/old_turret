@@ -391,7 +391,10 @@ class MainGUI:
         
         # Get current time and date, writes it to image.
         now = datetime.datetime.now()
-        cv2.putText(frame, str(now)[:19], (10,HEIGHT-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+        if (WIDTH,HEIGHT) == (320, 240) or (WIDTH,HEIGHT) == (640, 480):
+            cv2.putText(frame, str(now)[:19], (10,HEIGHT-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+        elif (WIDTH,HEIGHT) == (160, 120):
+            cv2.putText(frame, str(now)[:19], (5,HEIGHT-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
         
         # Search for upperbodies!
         if len(rects_upperbody) > 0:
@@ -433,7 +436,11 @@ class MainGUI:
         counter+=1;
         
         # Write current FPS on screen
-        cv2.putText(frame, "FPS: {!s}".format(fps_counter.current_fps), (WIDTH-60,HEIGHT-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+        if (WIDTH,HEIGHT) == (320, 240) or (WIDTH,HEIGHT) == (640, 480):
+            cv2.putText(frame, "FPS: {!s}".format(fps_counter.current_fps), (WIDTH-60,HEIGHT-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+        elif (WIDTH,HEIGHT) == (160, 120):
+            cv2.putText(frame, "FPS: {!s}".format(fps_counter.current_fps), (WIDTH-55, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+            
         
         # If GUI is enabled, change image color model from BGR to RGB, convert to GTK compatible image, update frame.
         if not args.nogui:
