@@ -77,8 +77,8 @@ if args.googledrive:
 # Width and height of the frames our turret will process
 WIDTH  = 320;
 HEIGHT = 240;
-CV_WIDTH_ID  = 3;
-CV_HEIGHT_ID = 4;
+CV_CAP_PROP_FRAME_WIDTH  = 3;
+CV_CAP_PROP_FRAME_HEIGHT = 4;
 
 # Rotation of the frames our turret will process
 if args.rotate: ROTATION = args.rotate;
@@ -268,8 +268,8 @@ class MainGUI:
     def on_framesizeoption_toggled(self, button, data):
         global WIDTH, HEIGHT
         WIDTH, HEIGHT = data;
-        camera.set(CV_WIDTH_ID, WIDTH);
-        camera.set(CV_HEIGHT_ID, HEIGHT);
+        camera.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
+        camera.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
         
     def on_framerotationoption_toggled(self, button, data):
         global ROTATION
@@ -323,11 +323,12 @@ class MainGUI:
             
             response = dialog.run()
             
+            global UPLOAD, UPLOAD_QUEUE, SAVE_TO_DRIVE;
+            
             if response == gtk.RESPONSE_OK:
                 gmail  = entry_email.get_text();
                 passwd = entry_passwd.get_text();
                 if gmail and passwd:
-                    global UPLOAD, UPLOAD_QUEUE, SAVE_TO_DRIVE;
                     print "Thank you. Activating..."
                     UPLOAD = save.GoogleDocs(gmail, passwd);
                     passwd = None;
@@ -346,7 +347,6 @@ class MainGUI:
             dialog.destroy()
         
         else:
-            global UPLOAD, UPLOAD_QUEUE, SAVE_TO_DRIVE;
             UPLOAD = None;
             UPLOAD_QUEUE.quit();
             UPLOAD_QUEUE = None;
@@ -470,8 +470,8 @@ if __name__ == '__main__':
     
     # Start a video capture from the first camera device found
     camera = cv2.VideoCapture(0)
-    camera.set(CV_WIDTH_ID, WIDTH);
-    camera.set(CV_HEIGHT_ID, HEIGHT);
+    camera.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
+    camera.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
 
     if not(camera == None):
         print "\nCamera is ready"
