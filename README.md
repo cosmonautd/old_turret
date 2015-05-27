@@ -29,6 +29,8 @@ To use this project the following needs to be installed:
     On Debian and derivatives (Ubuntu, Mint, elementary OS...):
     
         $ sudo apt-get install python-opencv
+
+    Make sure your OpenCV version is at least 2.4, otherwise face recognition won't work!
     
     If your distro's repositories doesn't have an OpenCV version available, 
     try this PPA:
@@ -76,9 +78,4 @@ To use this project the following needs to be installed:
    
 
 
-Note: This code has been tested in Ubuntu 14.04 and Python 2.7.5.
-
-
-
-
-
+Note: This code has been tested in Ubuntu 14.04, Python 2.7.5 and OpenCV 2.4.8
