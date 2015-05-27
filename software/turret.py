@@ -23,7 +23,7 @@ import locale
 import fps
 import utils
 import gobject
-
+import facerec
 
 # Parse command line arguments and set initial configuration
 
@@ -103,6 +103,10 @@ fps_counter = fps.FpsCounter();
 
 # Internet connection status
 net_status = "OFF"
+
+# Face recognition
+mrfaces = facerec.FaceRecognizer('lbph')
+mrfaces.load_model('models/')
 
 # Some functions to handle OS signals and GUI events
 
@@ -371,6 +375,39 @@ class MainGUI:
     
     # Detection and screen update function
 
+    def old_detection(self, frame):
+        
+        # Detect upperbodies in the frame and draw a green rectangle around it, if found
+        (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (75,75))
+        frame = imgutils.box(rects_upperbody, frame)
+        rects_face = [];
+        decision = False;
+        # Search for upperbodies!
+        if len(rects_upperbody) > 0:
+        
+            # For each upperbody detected, search for faces! (Removes false positives)
+            for x, y, w, h in rects_upperbody:
+                frame_crop = frame[y:h, x:w];
+                (rects_face, frame_crop) = imgutils.detect(frame_crop, cascade_face, (40,40))
+                
+                # For each face detected, make some drawings around it
+                for xf, yf, wf, hf in rects_face:
+                
+                    xf += x;
+                    yf += y;
+                    wf += x;
+                    hf += y;
+                    
+                    cv2.circle(frame, (xf, yf), 10, (255,0,0), thickness=1, lineType=8, shift=0)
+                    cv2.circle(frame, (wf, hf), 10, (0,0,255), thickness=1, lineType=8, shift=0)
+                    
+                    frame = imgutils.box([[xf, yf, wf, hf]], frame, (0, 0, 255))
+        
+        if len(rects_face) > 0:
+            decision = True;
+        
+        return frame, decision
+
     def set_frame(self):
         """Read a new frame from camera, process it, search for humans."""
         
@@ -385,9 +422,24 @@ class MainGUI:
         if ROTATION:
             frame = imgutils.rotate(frame, ROTATION);
         
-        # Detect upperbodies in the frame and draw a green rectangle around it, if found
-        (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (75,75))
-        frame = imgutils.box(rects_upperbody, frame)
+        # Extract data from frame and decide if it should be saved
+        #frame, decision = self.old_detection(frame);
+        frame, faces, found, decision = mrfaces.recognize(frame);
+        
+        # Verify if it is time for our turret to speak and save a frame
+        if decision and counter - dcounter > LIMIT:
+            dcounter = counter
+            if not SILENT:
+                sound.play("detection")     # i see you, there you are
+            now = datetime.datetime.now()
+            if SAVE_TO_DRIVE:
+                thread.start_new_thread( save.save, (frame, now, UPLOAD_QUEUE) )   # another thread
+                #multiprocessing.Process( target=imgutils.save, args=(frame, now, uploadqueue)).start() # another process
+            else:
+                thread.start_new_thread( save.save, (frame, now) )   # another thread
+                #multiprocessing.Process( target=imgutils.save, args=(frame, now)).start() # another process
+        
+        counter+=1;
         
         # Get current time and date, writes it to image.
         now = datetime.datetime.now()
@@ -396,51 +448,11 @@ class MainGUI:
         elif (WIDTH,HEIGHT) == (160, 120):
             cv2.putText(frame, str(now)[:19], (5,HEIGHT-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
         
-        # Search for upperbodies!
-        if len(rects_upperbody) > 0:
-        
-            # For each upperbody detected, search for faces! (Removes false positives)
-            for x_1, y_1, x_2, y_2 in rects_upperbody:
-                frame_crop = frame[y_1:y_2,x_1:x_2];
-                (rects_face, frame_crop) = imgutils.detect(frame_crop, cascade_face, (40,40))
-                
-                # For each face detected, make some drawings around it
-                for coord in rects_face:
-                    x1 = coord[0]
-                    y1 = coord[1]
-                    x2 = coord[2]
-                    y2 = coord[3]
-                    coord[0] = x1 + x_1;
-                    coord[1] = y1 + y_1;
-                    coord[2] = x2 + x_1;
-                    coord[3] = y2 + y_1;
-                    
-                    cv2.circle(frame, (coord[0],coord[1]), 10, (255,0,0), thickness=1, lineType=8, shift=0)
-                    cv2.circle(frame, (coord[2],coord[3]), 10, (0,0,255), thickness=1, lineType=8, shift=0)
-                    
-                    frame = imgutils.box([coord], frame, (0, 0, 255))
-        
-            # Verify if it is time for our turret to speak and save a frame
-            if len(rects_face) > 0 and counter - dcounter > LIMIT:
-                dcounter = counter
-                if not SILENT:
-                    sound.play("detection")     # i see you, there you are
-                now = datetime.datetime.now()
-                if SAVE_TO_DRIVE:
-                    thread.start_new_thread( save.save, (frame, now, UPLOAD_QUEUE) )   # another thread
-                    #multiprocessing.Process( target=imgutils.save, args=(frame, now, uploadqueue)).start() # another process
-                else:
-                    thread.start_new_thread( save.save, (frame, now) )   # another thread
-                    #multiprocessing.Process( target=imgutils.save, args=(frame, now)).start() # another process
-        
-        counter+=1;
-        
         # Write current FPS on screen
         if (WIDTH,HEIGHT) == (320, 240) or (WIDTH,HEIGHT) == (640, 480):
             cv2.putText(frame, "FPS: {!s}".format(fps_counter.current_fps), (WIDTH-60,HEIGHT-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
         elif (WIDTH,HEIGHT) == (160, 120):
             cv2.putText(frame, "FPS: {!s}".format(fps_counter.current_fps), (WIDTH-55, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
-            
         
         # If GUI is enabled, change image color model from BGR to RGB, convert to GTK compatible image, update frame.
         if not args.nogui:
