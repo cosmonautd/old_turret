@@ -105,7 +105,8 @@ fps_counter = fps.FpsCounter();
 net_status = "OFF"
 
 # Face recognition
-mrfaces = facerec.FaceRecognizer('lbph')
+mrfaces = facerec.FaceRecognizer('fisher', 120)
+#mrfaces.train_model('faces/', 'models/');
 mrfaces.load_model('models/')
 
 # Some functions to handle OS signals and GUI events
@@ -424,7 +425,7 @@ class MainGUI:
         
         # Extract data from frame and decide if it should be saved
         #frame, decision = self.old_detection(frame);
-        frame, faces, found, decision = mrfaces.recognize(frame);
+        frame, faces, found, confs, decision = mrfaces.recognize(frame);
         
         # Verify if it is time for our turret to speak and save a frame
         if decision and counter - dcounter > LIMIT:

@@ -5,19 +5,21 @@ import numpy
 
 class FaceRecognizer(object):
 
-    def __init__(self, algorithm):
+    def __init__(self, algorithm, confidence_threshold):
         
         self.cascade_face = cv2.CascadeClassifier("haarcascades/haarcascade_frontalface_alt.xml")
         
         if algorithm == 'eigen' or algorithm == 'fisher' or algorithm == 'lbph':
             self.algorithm = algorithm;
         
+        self.threshold = confidence_threshold;
+        
         if self.algorithm == 'eigen':
-            self.recognizer = cv2.createEigenFaceRecognizer();
+            self.recognizer = cv2.createEigenFaceRecognizer(threshold=self.threshold);
         elif self.algorithm == 'fisher':
-            self.recognizer = cv2.createFisherFaceRecognizer();
+            self.recognizer = cv2.createFisherFaceRecognizer(threshold=self.threshold);
         elif self.algorithm == 'lbph':
-            self.recognizer = cv2.createLBPHFaceRecognizer();
+            self.recognizer = cv2.createLBPHFaceRecognizer(threshold=self.threshold);
         
         self.names = []
 
@@ -157,7 +159,7 @@ class FaceRecognizer(object):
             
         else:
             
-            print "Specified path does not exist"
+            print "ERROR: Specified path does not exist"
         
     
     def load_model(self, modelpath):
@@ -172,19 +174,19 @@ class FaceRecognizer(object):
         
             if os.path.exists(modelpath+'model-eigen'):
                 self.recognizer.load(modelpath+'model-eigen')
-            else: print "No model found"
+            else: print "ERROR: No model found"
         
         elif self.algorithm == 'fisher':
         
             if os.path.exists(modelpath+'model-fisher'):
                 self.recognizer.load(modelpath+'model-fisher')
-            else: print "No model found"
+            else: print "ERROR: No model found"
         
         elif self.algorithm == 'lbph':
         
             if os.path.exists(modelpath+'model-lbph'):
                 self.recognizer.load(modelpath+'model-lbph')
-            else: print "No model found"
+            else: print "ERROR: No model found"
         
         self.names = names;
     
@@ -196,8 +198,11 @@ class FaceRecognizer(object):
     
     def recognize(self, image, search_for_faces=True, write_names_on_image=True):
         
+        faces = []
+        found = []
+        confs = []
+        
         if search_for_faces:
-            found = []
             (faces, image) = imgutils.detect(image, self.cascade_face, (64,64))
             if len(faces) > 0:
                 for (x, y, w, h) in faces:
@@ -206,14 +211,18 @@ class FaceRecognizer(object):
                     image_crop = imgutils.resize(image_crop, 64, 64)
                     image_crop = cv2.cvtColor(image_crop, cv2.COLOR_BGR2GRAY)
                     id_predicted, conf = self.recognizer.predict(image_crop)
+                    confs.append(conf)
+                    cv2.putText(image, str(conf)[:5], (w-25, h+12), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255,255,255))
                     if id_predicted > -1 and write_names_on_image:
                         cv2.putText(image, self.names[id_predicted], (x, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
                         found.append(self.names[id_predicted])
-                    else: cv2.putText(image, 'Unknown', (x, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+                    else: 
+                        cv2.putText(image, 'Unknown', (x, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255,255,255))
+                        found.append('Unknown')
             image = imgutils.box(faces, image)
             
             if len(faces) > 0: decision = True
             else: decision = False
             
-            return image, faces, found, decision
+            return image, faces, found, confs, decision
         
