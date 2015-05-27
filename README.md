@@ -7,6 +7,7 @@ Run with:
 
         $ python turret.py
 
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 This turret is able to save all people detections in a folder inside 
 your Google Drive account. If you want this functionality, you'll have to 
@@ -18,6 +19,8 @@ for less secure apps.
 
 Note: please, do not input your login data if you do not trust this program. 
 Check our code, so you can trust it.
+
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 To use this project the following needs to be installed:
 
@@ -51,7 +54,9 @@ To use this project the following needs to be installed:
     
         $ sudo apt-get install python-pygame
         
-        
+
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
+
 - gdata:
 
     For our purposes, gdata version must be 2.0.15 or above.
@@ -69,6 +74,7 @@ To use this project the following needs to be installed:
     
     https://code.google.com/p/gdata-python-client/downloads/list
 
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 - GTK2:
 
