@@ -6,8 +6,9 @@ Upload images to the cloud in a hierarchical time structure.
 # Requires python-gdata >= 2.0.15 (sudo apt-get install python-gdata)
 # Based on code from http://planzero.org/blog/2012/04/13/uploading_any_file_to_google_docs_with_python
 
-from __future__ import division
-import os.path, atom.data, gdata.client, gdata.docs.client, gdata.docs.data
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import os.path 
 import sys, time, mimetypes
 import socket
 import cv2
@@ -23,7 +24,7 @@ def save(img, img_time, uploadqueue=None):
         Args:
             img: a cv2 image.
             img_time: the time of capture.
-            google: a GoogleDocs object.
+            google: a Drive object.
         
         Returns:
             
@@ -60,11 +61,11 @@ class UploadQueue(object):
     """Implements a queue of images for upload.
     """
 
-    def __init__(self, googledocs):
+    def __init__(self, drive):
         """UploadQueue constructor.
         
             Args:
-                googledocs: a GoogleDocs object.
+                drive: a Drive object.
             
             Returns:
             
@@ -72,7 +73,7 @@ class UploadQueue(object):
             
         """
         self.uploadqueue = deque();
-        self.googledocs = googledocs;
+        self.drive = drive;
         self.running = True;
 
     def append(self, img_time):
@@ -98,28 +99,28 @@ class UploadQueue(object):
             Raises:
             
         """
-        while self.running and self.googledocs:
-            if self.googledocs and len(self.uploadqueue) > 0:
+        while self.running and self.drive:
+            if self.drive and len(self.uploadqueue) > 0:
                 img_time = self.uploadqueue[0];
                 self.uploadqueue.popleft();
                 upload_path = None;
                 while not upload_path:
-                    upload_path = self.googledocs.get_link(img_time);
+                    upload_path = self.drive.get_link(img_time);
                     time.sleep(1);
-                if self.googledocs:
-                    self.googledocs.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
+                if self.drive:
+                    self.drive.save_img("/".join(("detected", str(img_time.year), str(img_time.month) + ". " 
                                          + img_time.strftime('%B'), str(img_time.day), str(img_time)[:19] + ".png")), upload_path);
                                          
     def quit(self):
-        self.googledocs = None;
+        self.drive = None;
         self.running = False;
         
 
 
-class GoogleDocs(object):
+class Drive(object):
     """Upload images to a Google Drive account in a time structure.
     
-        GoogleDocs uses google login data to manage a Google Docs 
+        Drive uses google login data to manage a Google Docs 
         account. This same API can be used to manage the new Google
         Drive. This class saves images according to date and time of 
         capture in a hierarchical time structure year/month/day/image.
@@ -129,46 +130,53 @@ class GoogleDocs(object):
         >>> import save;
         >>> email = "username@gmail.com";
         >>> password = "yourpassword-becareful";
-        >>> googledocs = save.GoogleDocs(email, password);
+        >>> drive = save.Drive(email, password);
         >>> current_time = datetime.datetime.now();
-        >>> folder_link = googledocs.get_link(current_time);
-        >>> googledocs.save_img("path/to/image.jpg", folder_link);
+        >>> folder_link = drive.get_link(current_time);
+        >>> drive.save_img("path/to/image.jpg", folder_link);
         
         Attributes:
             No public attributes.
             
     """
     
-    def __init__(self, email, raw_password):
-        """GoogleDocs constructor.
+    def __init__(self):
+        """Drive constructor.
         
             Args:
                 email: a string, a valid gmail account.
                 raw_password: a string, matching raw password for email.
             
             Returns:
-                A GoogleDocs object.
+                A Drive object.
             
             Raises:
                 No information.
             
         """
         
-        self._client = gdata.docs.client.DocsClient(source='people-detection-turret');
-        
-        # Log into Google Docs
-        print "Logging in", email
-        try:
-            self._client.ClientLogin(email, raw_password, self._client.source);
-        except (gdata.client.BadAuthentication, gdata.client.Error), e:
-            sys.exit("ERROR: " + str(e))
-        except:
-            sys.exit("ERROR: Unable to login")
-        print "Success!"
-        raw_password = None;
+        self.g = GoogleAuth()
+        self.g.LocalWebserverAuth()
+        self.googledrive = GoogleDrive(self.g)
     
     
-    def get_link(self, time):
+    def folder_exists(self, folder_name, file_list):
+        for f in file_list:
+            if f['mimeType']=='application/vnd.google-apps.folder' and f['title'] == folder_name:
+                return True, f
+        return False, None;
+    
+    
+    def create_subfolder(self, folder_id, sfldname):
+        new_folder = self.googledrive.CreateFile({'title':'{}'.format(sfldname),
+                                   'mimeType':'application/vnd.google-apps.folder'})
+        if folder_id is not None:
+            new_folder['parents'] = [{u'id': folder_id}]
+        new_folder.Upload()
+        return new_folder
+    
+    
+    def get_link(self, img_time, root='root', pos=0):
         """Get the correct link to save an image in the time structure.
         
             Args:
@@ -184,69 +192,43 @@ class GoogleDocs(object):
                 No information.
                 
         """
-        try:
-            # Find the detected/ folder
-            # Create a query matching exactly a title, and include collections
-            q = gdata.docs.client.DocsQuery(title='detected', title_exact='true', show_collections='true')
-            
-            # Execute the query and get the first entry named "detected"
-            try:
-                detected_folder = self._client.GetResources(q=q).entry[0]
-            # If detected/ is not found, create it and add the current year, month and day to the time hierarchy
-            except IndexError:
-                detected_folder = gdata.docs.data.Resource(type='folder', title='detected');
-                detected_folder = self._client.CreateResource(detected_folder);
-                year_folder = gdata.docs.data.Resource(type='folder', title=str(time.year));
-                year_folder = self._client.CreateResource(year_folder, collection=detected_folder);
-                month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
-                month_folder = self._client.CreateResource(month_folder, collection=year_folder);
-                day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-                day_folder = self._client.CreateResource(day_folder, collection=month_folder);
-                return day_folder.get_resumable_create_media_link().href;
-                    
-            # If detected/ is found, search for the current year, month and day. Returns a link to the current day folder
-            contents_detected = self._client.GetResources(uri=detected_folder.content.src)
-            for year in contents_detected.entry:
-                if year.title.text == str(time.year):
-                    q2 = gdata.docs.client.DocsQuery(title=year.title.text, title_exact='true', show_collections='true');
-                    months = self._client.GetResources(q=q2).entry[0]
-                    contents_year = self._client.GetResources(uri=months.content.src)
-                    for month in contents_year.entry:
-                        if month.title.text == str(time.month) + ". " + time.strftime('%B') + " " + str(time.year):
-                            q3 = gdata.docs.client.DocsQuery(title=month.title.text, title_exact='true', show_collections='true');
-                            days = self._client.GetResources(q=q3).entry[0]
-                            contents_month = self._client.GetAllResources(uri=days.content.src)
-                            for day in contents_month:
-                                if day.title.text == str(time.day):
-                                    return day.get_resumable_create_media_link().href;
-                            
-                            # If current day folder not found, create it
-                            day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-                            day_folder = self._client.CreateResource(day_folder, collection=month);
-                            return day_folder.get_resumable_create_media_link().href;
-                    
-                    # If current month folder not found, create it
-                    month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
-                    month_folder = self._client.CreateResource(month_folder, collection=year);
-                    day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-                    day_folder = self._client.CreateResource(day_folder, collection=month_folder);
-                    return day_folder.get_resumable_create_media_link().href;
-                    
-            # If current year folder not found, create it
-            year_folder = gdata.docs.data.Resource(type='folder', title=str(time.year));
-            year_folder = self._client.CreateResource(year_folder, collection=detected_folder);
-            month_folder = gdata.docs.data.Resource(type='folder', title=str(time.month) + ". " + time.strftime('%B') + " " + str(time.year));
-            month_folder = self._client.CreateResource(month_folder, collection=year_folder);
-            day_folder = gdata.docs.data.Resource(type='folder', title=str(time.day));
-            day_folder = self._client.CreateResource(day_folder, collection=month_folder);
-            return day_folder.get_resumable_create_media_link().href;
         
-        except socket.gaierror:
-            pass;
+        position = pos
+        structure = ['detected', 'year', 'month', 'day']
+        
+        if   structure[position] == 'detected': folder_name = 'detected'
+        elif structure[position] == 'year':     folder_name = str(img_time.year)
+        elif structure[position] == 'month':    folder_name = str(img_time.month) + ". " + img_time.strftime('%B')
+        elif structure[position] == 'day':      folder_name = str(img_time.day)
+        
+        file_list = self.googledrive.ListFile({'q': "'%s' in parents and trashed=false" % root}).GetList()
+        
+        exists, folder = self.folder_exists(folder_name, file_list)
+        
+        if exists:
+            if structure[position] == 'day':
+                return folder
+            else:
+                return self.get_link(img_time, root=folder['id'], pos=position+1)
+        else:
+            new_folder = self.create_subfolder(root, folder_name)
+            if structure[position] == 'detected':
+                new_folder = self.create_subfolder(new_folder['id'], str(img_time.year))
+                new_folder = self.create_subfolder(new_folder['id'], str(img_time.month) + ". " + img_time.strftime('%B'))
+                new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
+                return new_folder
+            elif structure[position] == 'year':
+                new_folder = self.create_subfolder(new_folder['id'], str(img_time.month) + ". " + img_time.strftime('%B'))
+                new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
+                return new_folder
+            elif structure[position] == 'month':
+                new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
+                return new_folder
+            elif structure[position] == 'day':
+                return new_folder
             
     
-    
-    def save_img(self, img_path, uri):
+    def save_img(self, img_path, folder):
         """Save a file to a specified folder in a Google Drive account.
         
             Args:
@@ -263,31 +245,11 @@ class GoogleDocs(object):
                 
         """
         
-        # Open the file to be uploaded
-        try:
-            img_file = open(img_path)
-        except IOError, e:
-            sys.exit('ERROR: Unable to open ' + img_path + ': ' + e[1])
-
-        # Get file size and type
-        file_size = os.path.getsize(img_file.name)
-        file_type = mimetypes.guess_type(img_file.name)[0]
+        new_img = self.googledrive.CreateFile({'title':'{}'.format(os.path.basename(img_path))})
+        new_img.SetContentFile(img_path)
+        if folder is not None:
+            new_img['parents'] = [{u'id': folder['id']}]
+        new_img.Upload()
+        return new_img
         
-        # Make sure Google doesn't try to do any conversion on the upload (e.g. convert images to documents)
-        if uri:
-            uri += '?convert=false'
-
-            # Create an uploader and upload the file
-            # Hint: it should be possible to use UploadChunk() to allow display of upload statistics for large uploads
-            t1 = time.time()
-            print 'Uploading file', img_path
-            uploader = gdata.client.ResumableUploader(self._client, img_file, file_type, file_size, chunk_size=1048576, desired_class=gdata.data.GDEntry)
-            try: 
-                new_entry = uploader.UploadFile(uri, entry=gdata.data.GDEntry(title=atom.data.Title(text=os.path.basename(img_file.name))))
-            except socket.gaierror:
-                print "Unknown error..."
-            # TODO: Uploading a file to drive sometimes results in strange error messages. Not fatal, but ugly. How to fix?
-            print 'Success uploading', img_path
-            print 'Uploaded', '{0:.2f}'.format(file_size / 1024 / 1024) + ' MiB in ' + str(round(time.time() - t1, 2)) + ' seconds'
-
 

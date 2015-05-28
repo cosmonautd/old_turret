@@ -50,29 +50,17 @@ UPLOAD = None
 UPLOAD_QUEUE = None
 SAVE_TO_DRIVE = False
 
-# GoogleDocs class object creation
+# Drive class object creation
 if args.googledrive:
-    print "\nThis turret is able to save all people detections in a folder inside your Google Drive account."
-    print "If you want this functionality, please input your login data here. Else, leave both blank."
-    print "As we're using a somewhat old login method, Google will block this application by default.\n"
-    print "To enable Google Drive, visit:"
-    print "https://www.google.com/settings/security/lesssecureapps"
-    print "and enable access for less secure apps.\n"
-    print "Please, do not input your login data if you do not trust this program. Check the code, so you can trust it.\n"
-    gmail  = raw_input("Gmail account: ");
-    passwd = getpass.getpass("Password: ");
-    if gmail and passwd:
-        print "Thank you. Activating..."
-        UPLOAD = save.GoogleDocs(gmail, passwd);
-        passwd = None;
-        SAVE_TO_DRIVE = True;
-        UPLOAD_QUEUE = save.UploadQueue(UPLOAD);
-        # We use three threads to upload detections.
-        thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
-        thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
-        thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
-    else:
-        print "Ok. Blank data. Not connecting to Google."
+
+    print "Activating..."
+    UPLOAD = save.Drive();
+    SAVE_TO_DRIVE = True;
+    UPLOAD_QUEUE = save.UploadQueue(UPLOAD);
+    # We use three threads to upload detections.
+    thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
+    thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
+    thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
 
 # Width and height of the frames our turret will process
 WIDTH  = 320;
@@ -105,7 +93,7 @@ fps_counter = fps.FpsCounter();
 net_status = "OFF"
 
 # Face recognition
-mrfaces = facerec.FaceRecognizer('fisher', 120)
+mrfaces = facerec.FaceRecognizer('lbph', 100)
 #mrfaces.train_model('faces/', 'models/');
 mrfaces.load_model('models/')
 
@@ -287,70 +275,16 @@ class MainGUI:
     def on_save_to_drive_toggled(self, button):
     
         if button.get_active():
-    
-            label = gtk.Label("\nThis turret is able to save all people detections\nin a folder inside your Google Drive account."
-                                  "\n\nIf you want this functionality, please input your\nlogin data here. Else, leave both blank."
-                                  "\n\nAs we're using a somewhat old login method, Google\nwill block this application by default.\n"
-                                  "\nTo enable Google Drive, visit:"
-                                  "\nhttps://www.google.com/settings/security/lesssecureapps"
-                                  "\nand enable access for less secure apps.\n"
-                                  "\nPlease, do not input your login data if you do not \ntrust this program. Check our code, so you can trust it.\n")
-            
-            dialog = gtk.Dialog("Enter password",
-                               None,
-                               gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                gtk.STOCK_OK, gtk.RESPONSE_OK))
-            dialog.set_border_width(5)
-            dialog.vbox.pack_start(label)
-            label.show()
-            
-            label = gtk.Label("Google Account")
-            label.set_justify(gtk.JUSTIFY_LEFT)
-            lalign = gtk.Alignment(0, 0.5, 0, 0.5)
-            lalign.add(label)
-            dialog.vbox.pack_start(lalign, True, True, 0)
-            
-            entry_email = gtk.Entry(max=40)
-            dialog.vbox.pack_start(entry_email, False, True, 0)
-            
-            label = gtk.Label("Password")
-            label.set_justify(gtk.JUSTIFY_LEFT)
-            lalign = gtk.Alignment(0, 0.1, 0, 0.1)
-            lalign.add(label)
-            dialog.vbox.pack_start(lalign, True, True, 0)
-            
-            entry_passwd = gtk.Entry(max=50)
-            entry_passwd.set_visibility(False)
-            dialog.vbox.pack_start(entry_passwd, True, True, 0)
-            
-            dialog.vbox.show_all()
-            
-            response = dialog.run()
-            
             global UPLOAD, UPLOAD_QUEUE, SAVE_TO_DRIVE;
-            
-            if response == gtk.RESPONSE_OK:
-                gmail  = entry_email.get_text();
-                passwd = entry_passwd.get_text();
-                if gmail and passwd:
-                    print "Thank you. Activating..."
-                    UPLOAD = save.GoogleDocs(gmail, passwd);
-                    passwd = None;
-                    SAVE_TO_DRIVE = True;
-                    UPLOAD_QUEUE = save.UploadQueue(UPLOAD);
-                    # We use three threads to upload detections.
-                    thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
-                    thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
-                    thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
-                else:
-                    print "STRANGE ERROR. CHECK IT."
-                self.save_to_drive_button.set_active(True)
-            elif response == gtk.RESPONSE_CANCEL:
-                pass
-            
-            dialog.destroy()
-        
+            print "Activating..."
+            UPLOAD = save.Drive();
+            SAVE_TO_DRIVE = True;
+            UPLOAD_QUEUE = save.UploadQueue(UPLOAD);
+            # We use three threads to upload detections.
+            thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
+            thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
+            thread.start_new_thread( UPLOAD_QUEUE.uploadloop, () )
+            self.save_to_drive_button.set_active(True)
         else:
             UPLOAD = None;
             UPLOAD_QUEUE.quit();
