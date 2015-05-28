@@ -7,6 +7,7 @@ Run with:
 
         $ python turret.py
 
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 This turret is able to save all people detections in a folder inside 
 your Google Drive account. If you want this functionality, you'll have to 
@@ -19,6 +20,8 @@ for less secure apps.
 Note: please, do not input your login data if you do not trust this program. 
 Check our code, so you can trust it.
 
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
+
 To use this project the following needs to be installed:
 
 - OpenCV cv2:
@@ -29,6 +32,8 @@ To use this project the following needs to be installed:
     On Debian and derivatives (Ubuntu, Mint, elementary OS...):
     
         $ sudo apt-get install python-opencv
+
+    Make sure your OpenCV version is at least 2.4, otherwise face recognition won't work!
     
     If your distro's repositories doesn't have an OpenCV version available, 
     try this PPA:
@@ -49,7 +54,9 @@ To use this project the following needs to be installed:
     
         $ sudo apt-get install python-pygame
         
-        
+
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
+
 - gdata:
 
     For our purposes, gdata version must be 2.0.15 or above.
@@ -67,6 +74,7 @@ To use this project the following needs to be installed:
     
     https://code.google.com/p/gdata-python-client/downloads/list
 
+[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 - GTK2:
 
@@ -76,9 +84,4 @@ To use this project the following needs to be installed:
    
 
 
-Note: This code has been tested in Ubuntu 14.04 and Python 2.7.5.
-
-
-
-
-
+Note: This code has been tested in Ubuntu 14.04, Python 2.7.5 and OpenCV 2.4.8
