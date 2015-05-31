@@ -7,24 +7,14 @@ Run with:
 
         $ python turret.py
 
-[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
-
 This turret is able to save all people detections in a folder inside 
 your Google Drive account. If you want this functionality, you'll have to 
-input your login data when required. Also, as we're using a somewhat old
-login method, Google will block this application by default. To enable
-the Google Drive functionality, you'll have to visit this link
-https://www.google.com/settings/security/lesssecureapps and enable access
-for less secure apps.
+add this app to permitted applications in your Google account when required.
 
-Note: please, do not input your login data if you do not trust this program. 
-Check our code, so you can trust it.
-
-[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 To use this project the following needs to be installed:
 
-- OpenCV cv2:
+- OpenCV cv2 (>=2.4):
     
     On Linux, OpenCV for Python will probably be in the repositories of your 
     distribution. In this case, use your package manager to install it.
@@ -55,26 +45,10 @@ To use this project the following needs to be installed:
         $ sudo apt-get install python-pygame
         
 
-[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
-
-- gdata:
-
-    For our purposes, gdata version must be 2.0.15 or above.
-
-    On Debian and derivatives (Ubuntu, Mint, elementary OS...)
+- PyDrive:
     
-        $ sudo apt-get install python-gdata
-        
-    If the repositories of your distribution only have an older version of 
-    gdata, you can try to install with python-pip:
-    
-        $ sudo pip install gdata
-    
-    Or you can download and install python-gdata from the following list:
-    
-    https://code.google.com/p/gdata-python-client/downloads/list
+        $ sudo pip install PyDrive
 
-[SAVE TO GOOGLE DRIVE IS CURRENTLY NOT WORKING. API DEPRECATED 27 May 2015]
 
 - GTK2:
 
