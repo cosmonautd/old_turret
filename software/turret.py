@@ -24,6 +24,8 @@ import fps
 import utils
 import gobject
 import facerec
+import stepper
+import threading
 
 # Parse command line arguments and set initial configuration
 
@@ -63,8 +65,8 @@ if args.googledrive:
     thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
 
 # Width and height of the frames our turret will process
-WIDTH  = 320;
-HEIGHT = 240;
+WIDTH  = 180;
+HEIGHT = 135;
 CV_CAP_PROP_FRAME_WIDTH  = 3;
 CV_CAP_PROP_FRAME_HEIGHT = 4;
 
@@ -97,6 +99,9 @@ net_status = "OFF"
 #mrfaces.train_model('faces/', 'models/');
 #mrfaces.load_model('models/')
 
+phi   = stepper.StepperMotor(18,22,24,26,0.0025)
+theta = stepper.StepperMotor(32,36,38,40,0.003)
+
 # Some functions to handle OS signals and GUI events
 
 def sigint_handler(signum, instant):
@@ -122,6 +127,21 @@ def update_net_status():
         else: 
             net_status = "OFF"
 
+
+ccst = None
+ncst = None
+# Control steppers
+def control_steppers(stepper, steps):
+    global ccst
+    if ccst:
+        if ccst.is_alive():
+            ccst.join()
+            ccst = ncst
+    if steps > 0:
+        stepper.step_clockwise(steps)
+    elif steps < 0:
+        stepper.step_counterclockwise(-steps)
+    
 
 class MainGUI:
     
@@ -312,8 +332,10 @@ class MainGUI:
 
     def old_detection(self, frame):
         
+        sqr = 65
+
         # Detect upperbodies in the frame and draw a green rectangle around it, if found
-        (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (75,75))
+        (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (sqr,sqr))
         frame = imgutils.box(rects_upperbody, frame)
         rects_face = [];
         decision = False;
@@ -321,7 +343,7 @@ class MainGUI:
         if len(rects_upperbody) > 0:
         
             # For each upperbody detected, search for faces! (Removes false positives)
-            for x, y, w, h in rects_upperbody:
+            """for x, y, w, h in rects_upperbody:
                 frame_crop = frame[y:h, x:w];
                 (rects_face, frame_crop) = imgutils.detect(frame_crop, cascade_face, (40,40))
                 
@@ -336,11 +358,33 @@ class MainGUI:
                     cv2.circle(frame, (xf, yf), 10, (255,0,0), thickness=1, lineType=8, shift=0)
                     cv2.circle(frame, (wf, hf), 10, (0,0,255), thickness=1, lineType=8, shift=0)
                     
-                    frame = imgutils.box([[xf, yf, wf, hf]], frame, (0, 0, 255))
+                    frame = imgutils.box([[xf, yf, wf, hf]], frame, (0, 0, 255))"""
 
-        if len(rects_face) > 0:
+        if len(rects_upperbody) > 0:
             decision = True;
-            print "Found a face at", w/2, h/2
+
+            x, y, w, h = rects_upperbody[0]
+
+            epsilon = 15
+            delta   = 10
+
+            global ncst
+
+            if (y+h)/2 > ((2*HEIGHT)/3) - (sqr/2) + epsilon: 
+                ncst = threading.Thread(target=control_steppers, args=(phi,3)) #phi.step_clockwise(3)
+                ncst.start()
+            elif (y+h)/2 < (HEIGHT/3) + (sqr/2) - epsilon:
+                ncst = threading.Thread(target=control_steppers, args=(phi,-3)) #phi.step_counterclockwise(3)
+                ncst.start()
+
+            if (x+w)/2 > ((2*WIDTH)/3) - (sqr/2) + delta:
+                ncst = threading.Thread(target=control_steppers, args=(theta,6)) #theta.step_clockwise(6)
+                ncst.start()
+            elif (x+w)/2 < (WIDTH/3) + (sqr/2) - delta:
+                ncst = threading.Thread(target=control_steppers, args=(theta,-6)) #theta.step_counterclockwise(6)
+                ncst.start()
+
+            print "Found upperbody at", (x+w)/2, (y+h)/2
         
         return frame, decision
 
@@ -420,6 +464,9 @@ if __name__ == '__main__':
     camera = cv2.VideoCapture(0)
     camera.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
     camera.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
+
+    #phi.step_counterclockwise(512/4)
+    #phi.step_clockwise(512/6)
 
     if not(camera == None):
         print "\nCamera is ready"
