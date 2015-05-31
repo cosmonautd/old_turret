@@ -28,7 +28,7 @@ import facerec
 # Parse command line arguments and set initial configuration
 
 # Guarantee current locale is set to english, US, so month names are written in english always.
-locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+#locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 
 # Arguments parsing
 parser = argparse.ArgumentParser(description="People detection turret. Detects people and optionally dispenses product")
@@ -93,9 +93,9 @@ fps_counter = fps.FpsCounter();
 net_status = "OFF"
 
 # Face recognition
-mrfaces = facerec.FaceRecognizer('lbph', 100)
+#mrfaces = facerec.FaceRecognizer('lbph', 100)
 #mrfaces.train_model('faces/', 'models/');
-mrfaces.load_model('models/')
+#mrfaces.load_model('models/')
 
 # Some functions to handle OS signals and GUI events
 
@@ -337,9 +337,10 @@ class MainGUI:
                     cv2.circle(frame, (wf, hf), 10, (0,0,255), thickness=1, lineType=8, shift=0)
                     
                     frame = imgutils.box([[xf, yf, wf, hf]], frame, (0, 0, 255))
-        
+
         if len(rects_face) > 0:
             decision = True;
+            print "Found a face at", w/2, h/2
         
         return frame, decision
 
@@ -358,8 +359,8 @@ class MainGUI:
             frame = imgutils.rotate(frame, ROTATION);
         
         # Extract data from frame and decide if it should be saved
-        #frame, decision = self.old_detection(frame);
-        frame, faces, found, confs, decision = mrfaces.recognize(frame);
+        frame, decision = self.old_detection(frame);
+        #frame, faces, found, confs, decision = mrfaces.recognize(frame);
         
         # Verify if it is time for our turret to speak and save a frame
         if decision and counter - dcounter > LIMIT:
