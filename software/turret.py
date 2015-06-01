@@ -65,8 +65,8 @@ if args.googledrive:
     thread.start_new_thread( UPLOADQUEUE.uploadloop, () )
 
 # Width and height of the frames our turret will process
-WIDTH  = 180;
-HEIGHT = 135;
+WIDTH  = 320;
+HEIGHT = 240;
 CV_CAP_PROP_FRAME_WIDTH  = 3;
 CV_CAP_PROP_FRAME_HEIGHT = 4;
 
@@ -332,7 +332,7 @@ class MainGUI:
 
     def old_detection(self, frame):
         
-        sqr = 65
+        sqr = 55
 
         # Detect upperbodies in the frame and draw a green rectangle around it, if found
         (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (sqr,sqr))
@@ -371,17 +371,17 @@ class MainGUI:
             global ncst
 
             if (y+h)/2 > ((2*HEIGHT)/3) - (sqr/2) + epsilon: 
-                ncst = threading.Thread(target=control_steppers, args=(phi,3)) #phi.step_clockwise(3)
+                ncst = threading.Thread(target=control_steppers, args=(phi,1)) #phi.step_clockwise(3)
                 ncst.start()
             elif (y+h)/2 < (HEIGHT/3) + (sqr/2) - epsilon:
-                ncst = threading.Thread(target=control_steppers, args=(phi,-3)) #phi.step_counterclockwise(3)
+                ncst = threading.Thread(target=control_steppers, args=(phi,-1)) #phi.step_counterclockwise(3)
                 ncst.start()
 
             if (x+w)/2 > ((2*WIDTH)/3) - (sqr/2) + delta:
-                ncst = threading.Thread(target=control_steppers, args=(theta,6)) #theta.step_clockwise(6)
+                ncst = threading.Thread(target=control_steppers, args=(theta,4)) #theta.step_clockwise(6)
                 ncst.start()
             elif (x+w)/2 < (WIDTH/3) + (sqr/2) - delta:
-                ncst = threading.Thread(target=control_steppers, args=(theta,-6)) #theta.step_counterclockwise(6)
+                ncst = threading.Thread(target=control_steppers, args=(theta,-4)) #theta.step_counterclockwise(6)
                 ncst.start()
 
             print "Found upperbody at", (x+w)/2, (y+h)/2
