@@ -201,34 +201,37 @@ class Drive(object):
         elif structure[position] == 'month':    folder_name = str(img_time.month) + ". " + img_time.strftime('%B')
         elif structure[position] == 'day':      folder_name = str(img_time.day)
         
+        file_list = None
+        
         try:
             file_list = self.googledrive.ListFile({'q': "'%s' in parents and trashed=false" % root}).GetList()
         except Exception, exception:
             print exception
         
-        exists, folder = self.folder_exists(folder_name, file_list)
-        
-        if exists:
-            if structure[position] == 'day':
-                return folder
+        if file_list:
+            exists, folder = self.folder_exists(folder_name, file_list)
+            
+            if exists:
+                if structure[position] == 'day':
+                    return folder
+                else:
+                    return self.get_link(img_time, root=folder['id'], pos=position+1)
             else:
-                return self.get_link(img_time, root=folder['id'], pos=position+1)
-        else:
-            new_folder = self.create_subfolder(root, folder_name)
-            if structure[position] == 'detected':
-                new_folder = self.create_subfolder(new_folder['id'], str(img_time.year))
-                new_folder = self.create_subfolder(new_folder['id'], str(img_time.month) + ". " + img_time.strftime('%B'))
-                new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
-                return new_folder
-            elif structure[position] == 'year':
-                new_folder = self.create_subfolder(new_folder['id'], str(img_time.month) + ". " + img_time.strftime('%B'))
-                new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
-                return new_folder
-            elif structure[position] == 'month':
-                new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
-                return new_folder
-            elif structure[position] == 'day':
-                return new_folder
+                new_folder = self.create_subfolder(root, folder_name)
+                if structure[position] == 'detected':
+                    new_folder = self.create_subfolder(new_folder['id'], str(img_time.year))
+                    new_folder = self.create_subfolder(new_folder['id'], str(img_time.month) + ". " + img_time.strftime('%B'))
+                    new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
+                    return new_folder
+                elif structure[position] == 'year':
+                    new_folder = self.create_subfolder(new_folder['id'], str(img_time.month) + ". " + img_time.strftime('%B'))
+                    new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
+                    return new_folder
+                elif structure[position] == 'month':
+                    new_folder = self.create_subfolder(new_folder['id'], str(img_time.day))
+                    return new_folder
+                elif structure[position] == 'day':
+                    return new_folder
             
     
     def save_img(self, img_path, folder):
