@@ -201,7 +201,10 @@ class Drive(object):
         elif structure[position] == 'month':    folder_name = str(img_time.month) + ". " + img_time.strftime('%B')
         elif structure[position] == 'day':      folder_name = str(img_time.day)
         
-        file_list = self.googledrive.ListFile({'q': "'%s' in parents and trashed=false" % root}).GetList()
+        try:
+            file_list = self.googledrive.ListFile({'q': "'%s' in parents and trashed=false" % root}).GetList()
+        except Exception, exception:
+            print exception
         
         exists, folder = self.folder_exists(folder_name, file_list)
         
