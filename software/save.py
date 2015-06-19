@@ -3,9 +3,6 @@ Upload images to the cloud in a hierarchical time structure.
 """
 # coding: utf-8
 
-# Requires python-gdata >= 2.0.15 (sudo apt-get install python-gdata)
-# Based on code from http://planzero.org/blog/2012/04/13/uploading_any_file_to_google_docs_with_python
-
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os.path 

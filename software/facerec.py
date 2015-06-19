@@ -11,6 +11,8 @@ class FaceRecognizer(object):
         
         if algorithm == 'eigen' or algorithm == 'fisher' or algorithm == 'lbph':
             self.algorithm = algorithm;
+        else:
+            self.algorithm = 'fisher'
         
         self.threshold = confidence_threshold;
         
@@ -110,7 +112,6 @@ class FaceRecognizer(object):
         
         for id in ids:
             if os.path.isdir(path+id):
-                print id
                 pics = os.listdir(path+id)
                 for pic in pics:
                     if pic.endswith('jpg'):
@@ -122,10 +123,6 @@ class FaceRecognizer(object):
                             image_crop = cv2.cvtColor(image_crop, cv2.COLOR_BGR2GRAY)
                             images.append(image_crop)
                             labels.append(int(id[1:]))
-                            #cv2.imshow("Adding faces to traning set...", image_crop)
-                            #cv2.waitKey(50)
-        #cv2.destroyAllWindows()
-        #cv2.waitKey(50)
         return images, labels, names
 
 
@@ -134,6 +131,8 @@ class FaceRecognizer(object):
         if not modelpath.endswith('/'): modelpath = modelpath + '/'
     
         if os.path.exists(databasepath):
+
+            print "Training", self.algorithm, "model..."
             
             images, labels, names = self.get_database(databasepath)
     
@@ -156,6 +155,8 @@ class FaceRecognizer(object):
             namefile.write('\n'.join(names))
             namefile.close()
             self.names = names;
+
+            print "Finished training", self.algorithm, "model."
             
         else:
             

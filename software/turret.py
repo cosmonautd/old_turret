@@ -1,28 +1,13 @@
+#!/usr/bin/python
 """
 A people detection turret. Will see everyone!
 """
 # coding: utf-8
 
 import cv2
-import time
-import datetime
-import os
-import thread
-import signal
 import sys
-import soundcat
-import save
-import multiprocessing
-import getpass
 import argparse
-import numpy
-import gtk
-import glib
-import imgutils
 import locale
-import fps
-import utils
-import gobject
 import facerec
 
 # Parse command line arguments and set initial configuration
@@ -31,13 +16,41 @@ import facerec
 locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 
 # Arguments parsing
-parser = argparse.ArgumentParser(description="People detection turret. Detects people and optionally dispenses product")
+parser = argparse.ArgumentParser(description="People detection turret. Detects people and optionally dispenses product.")
 parser.add_argument("-s", "--silent", help="Shut down the turret's sound modules.", action="store_true");
-parser.add_argument("-g", "--googledrive", help="Save a copy of detections in a folder inside your Google Drive account", action="store_true");
+parser.add_argument("-g", "--googledrive", help="Save a copy of detections in a folder inside your Google Drive account.", action="store_true");
 parser.add_argument("-n", "--nogui", help="Doesn't show a graphical user interface.", action="store_true");
-parser.add_argument("-r", "--rotate", type=int, help="Rotate camera input counterclockwise")
+parser.add_argument("-r", "--rotate", type=int, help="Rotate camera input counterclockwise.")
+parser.add_argument("-f", "--facerecognition", type=str, help="Enable face recognition. Possible options are eigen, fisher or lbph. Standard is fisher.")
+parser.add_argument("-t", "--train", help="Train a new model for face recognition before startup, using /faces database.", action="store_true");
+parser.add_argument("-a", "--addface", type=str, help="Add a new face to /faces database. Argument is the face name.")
 
 args = parser.parse_args();
+
+if args.addface:
+	mrfaces = facerec.FaceRecognizer('', 100)
+	mrfaces.add(args.addface, 300)
+	sys.exit()
+
+# Sorry, this is strange import pattern must happen because of an unknown bug!
+# There is something strange happening with cv2.imshow(), in mrfaces.add(), and some of these imports.
+
+import time
+import datetime
+import os
+import thread
+import signal
+import soundcat
+import save
+import multiprocessing
+import getpass
+import numpy
+import gtk
+import glib
+import imgutils
+import fps
+import utils
+import gobject
 
 # Soundcat object creation
 # This object is responsible for categorizing sounds stored in sounds/, according to the situation
@@ -93,9 +106,12 @@ fps_counter = fps.FpsCounter();
 net_status = "OFF"
 
 # Face recognition
-mrfaces = facerec.FaceRecognizer('lbph', 100)
-#mrfaces.train_model('faces/', 'models/');
-mrfaces.load_model('models/')
+if args.facerecognition:
+	mrfaces = facerec.FaceRecognizer(args.facerecognition, 100)
+	if args.train:
+		mrfaces.train_model('faces/', 'models/');
+	else: 
+		mrfaces.load_model('models/')
 
 # Some functions to handle OS signals and GUI events
 
@@ -313,7 +329,7 @@ class MainGUI:
     def old_detection(self, frame):
         
         # Detect upperbodies in the frame and draw a green rectangle around it, if found
-        (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (75,75))
+        (rects_upperbody, frame) = imgutils.detect(frame, cascade_upperbody, (60,60))
         frame = imgutils.box(rects_upperbody, frame)
         rects_face = [];
         decision = False;
@@ -323,7 +339,7 @@ class MainGUI:
             # For each upperbody detected, search for faces! (Removes false positives)
             for x, y, w, h in rects_upperbody:
                 frame_crop = frame[y:h, x:w];
-                (rects_face, frame_crop) = imgutils.detect(frame_crop, cascade_face, (40,40))
+                (rects_face, frame_crop) = imgutils.detect(frame_crop, cascade_face, (25,25))
                 
                 # For each face detected, make some drawings around it
                 for xf, yf, wf, hf in rects_face:
@@ -333,8 +349,8 @@ class MainGUI:
                     wf += x;
                     hf += y;
                     
-                    cv2.circle(frame, (xf, yf), 10, (255,0,0), thickness=1, lineType=8, shift=0)
-                    cv2.circle(frame, (wf, hf), 10, (0,0,255), thickness=1, lineType=8, shift=0)
+                    #cv2.circle(frame, ((w+x)/2, (h+y)/2), 10, (255,0,0), thickness=1, lineType=8, shift=0)
+                    #cv2.circle(frame, (wf, hf), 10, (0,0,255), thickness=1, lineType=8, shift=0)
                     
                     frame = imgutils.box([[xf, yf, wf, hf]], frame, (0, 0, 255))
         
@@ -358,8 +374,10 @@ class MainGUI:
             frame = imgutils.rotate(frame, ROTATION);
         
         # Extract data from frame and decide if it should be saved
-        #frame, decision = self.old_detection(frame);
-        frame, faces, found, confs, decision = mrfaces.recognize(frame);
+        if args.facerecognition:
+        	frame, faces, found, confs, decision = mrfaces.recognize(frame);
+        else:
+        	frame, decision = self.old_detection(frame);
         
         # Verify if it is time for our turret to speak and save a frame
         if decision and counter - dcounter > LIMIT:
