@@ -24,6 +24,7 @@ parser.add_argument("-r", "--rotate", type=int, help="Rotate camera input counte
 parser.add_argument("-f", "--facerecognition", type=str, help="Enable face recognition. Possible options are eigen, fisher or lbph. Standard is fisher.")
 parser.add_argument("-t", "--train", help="Train a new model for face recognition before startup, using /faces database.", action="store_true");
 parser.add_argument("-a", "--addface", type=str, help="Add a new face to /faces database. Argument is the face name.")
+parser.add_argument("-b", "--bananas", help="Recognize bananas! Experiment only, will probably not work.", action="store_true")
 
 args = parser.parse_args();
 
@@ -92,6 +93,8 @@ else: SILENT = False;
 # We use classifiers commonly found in opencv packages
 cascade_upperbody = cv2.CascadeClassifier("haarcascades/haarcascade_mcs_upperbody.xml")
 cascade_face = cv2.CascadeClassifier("haarcascades/haarcascade_frontalface_alt.xml")
+
+if(args.bananas): cascade_upperbody = cv2.CascadeClassifier("haarcascades/banana_classifier")
 
 # Frame counters, used to control our turret's talk timing and image saving speed
 counter = 0     # Store total number of frames since start of execution
