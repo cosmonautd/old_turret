@@ -117,6 +117,20 @@ def resize(img, width=None, height=None):
         return cv2.resize(img, (width, height), interpolation = cv2.INTER_LINEAR);
 
 
+def crop(img, startx, endx, starty, endy):
+    """Crop an image.
 
-            
+        Args:
+            img: a cv2 image.
+            startx: starting pixel in x direction.
+            endx: ending pixel in x direction.
+            starty: starting pixel in y direction.
+            endy: ending pixel in y direction.
 
+        Returns:
+            The input cv2 image, cropped.
+
+        Raises:
+
+    """
+    return img[starty:endy, startx:endx]

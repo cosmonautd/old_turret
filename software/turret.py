@@ -110,7 +110,7 @@ net_status = "OFF"
 
 # Face recognition
 if args.facerecognition:
-	mrfaces = facerec.FaceRecognizer(args.facerecognition, 100)
+	mrfaces = facerec.FaceRecognizer(args.facerecognition, 500)
 	if args.train:
 		mrfaces.train_model('faces/', 'models/');
 	else: 
