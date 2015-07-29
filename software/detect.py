@@ -35,6 +35,7 @@ def old_detection(frame, cascade_upperbody, cascade_face):
     return frame, decision
 
 
+# based on a tutorial from http://www.pyimagesearch.com/
 def motion_detection(frame, first_frame, min_area=200):
  
     decision = False

@@ -25,6 +25,7 @@ parser.add_argument("-f", "--facerecognition", type=str, help="Enable face recog
 parser.add_argument("-t", "--train", help="Train a new model for face recognition before startup, using /faces database.", action="store_true");
 parser.add_argument("-a", "--addface", type=str, help="Add a new face to /faces database. Argument is the face name.")
 parser.add_argument("-b", "--bananas", help="Recognize bananas! Experiment only, will probably not work.", action="store_true")
+parser.add_argument("-m", "--motiondetection", help="Motion detection function based on background subtraction.", action="store_true")
 
 args = parser.parse_args();
 
@@ -346,19 +347,19 @@ class MainGUI:
         
         # Rotate image if required
         if ROTATION:
-            frame = imgutils.rotate(frame, ROTATION);
-        
-        if FIRST_FRAME == None:
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray = cv2.GaussianBlur(gray, (21, 21), 0)
-            FIRST_FRAME = gray
+            frame = imgutils.rotate(frame, ROTATION);        
 
         # Extract data from frame and decide if it should be saved
         if args.facerecognition:
         	frame, faces, found, confs, decision = mrfaces.recognize(frame);
-        else:
-        	#frame, decision = detect.old_detection(frame, cascade_upperbody, cascade_face);
+        elif args.motiondetection:
+            if FIRST_FRAME == None:
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                gray = cv2.GaussianBlur(gray, (21, 21), 0)
+                FIRST_FRAME = gray
             frame, decision = detect.motion_detection(frame, FIRST_FRAME);
+        else:
+        	frame, decision = detect.old_detection(frame, cascade_upperbody, cascade_face);
         
         # Verify if it is time for our turret to speak and save a frame
         if decision and counter - dcounter > LIMIT:
