@@ -117,6 +117,9 @@ if args.facerecognition:
 	else: 
 		mrfaces.load_model('models/')
 
+# Motion detection
+FIRST_FRAME = None
+
 # Some functions to handle OS signals and GUI events
 
 def sigint_handler(signum, instant):
@@ -334,6 +337,7 @@ class MainGUI:
         """Read a new frame from camera, process it, search for humans."""
         
         global counter, dcounter, LIMIT, last_sec_frames, WIDTH, HEIGHT, ROTATION, SILENT, SAVE_TO_DRIVE
+        global FIRST_FRAME
         
         # Here, frames will be continuously captured and processed
         # Capture and apply some operations to captured frame before pattern detection
@@ -344,11 +348,17 @@ class MainGUI:
         if ROTATION:
             frame = imgutils.rotate(frame, ROTATION);
         
+        if FIRST_FRAME == None:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.GaussianBlur(gray, (21, 21), 0)
+            FIRST_FRAME = gray
+
         # Extract data from frame and decide if it should be saved
         if args.facerecognition:
         	frame, faces, found, confs, decision = mrfaces.recognize(frame);
         else:
-        	frame, decision = detect.old_detection(frame, cascade_upperbody, cascade_face);
+        	#frame, decision = detect.old_detection(frame, cascade_upperbody, cascade_face);
+            frame, decision = detect.motion_detection(frame, FIRST_FRAME);
         
         # Verify if it is time for our turret to speak and save a frame
         if decision and counter - dcounter > LIMIT:
