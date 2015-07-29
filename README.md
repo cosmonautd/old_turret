@@ -49,6 +49,9 @@ To use this project the following needs to be installed:
     
         $ sudo pip install PyDrive
 
+    PyDrive uses OAuth2.0 authentication. In order to enable uploads, you must register the application.
+    Detailed instructions can be found in this link: https://pythonhosted.org/PyDrive/quickstart.html
+    Look for the Authentication section.
 
 - GTK2:
 
