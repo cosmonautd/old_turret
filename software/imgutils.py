@@ -9,7 +9,7 @@ import datetime
 import os
 
 
-def detect(img, cascade, min_rectangle):
+def detect_pattern(img, cascade, min_rectangle):
     """Pattern detection function.
     
         Args:

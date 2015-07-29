@@ -40,7 +40,7 @@ class FaceRecognizer(object):
         images = []
         while len(images) < number_of_captures:
             ret, frame = video_capture.read()
-            (faces, frame) = imgutils.detect(frame, self.cascade_face, (75,75))
+            (faces, frame) = imgutils.detect_pattern(frame, self.cascade_face, (75,75))
             if len(faces) > 0:
                 for (x, y, w, h) in faces:
                     cropped_frame = frame[y:h, x:w]
@@ -81,7 +81,7 @@ class FaceRecognizer(object):
                 images = []
                 while len(images) < number_of_captures:
                     ret, frame = video_capture.read()
-                    (faces, frame) = imgutils.detect(frame, self.cascade_face, (75,75))
+                    (faces, frame) = imgutils.detect_pattern(frame, self.cascade_face, (75,75))
                     if len(faces) > 0:
                         for (x, y, w, h) in faces:
                             cropped_frame = frame[y:h, x:w]
@@ -116,7 +116,7 @@ class FaceRecognizer(object):
                 for pic in pics:
                     if pic.endswith('jpg'):
                         image = cv2.imread(path+id+'/'+pic)
-                        (face, image) = imgutils.detect(image, self.cascade_face, (50,50))
+                        (face, image) = imgutils.detect_pattern(image, self.cascade_face, (50,50))
                         for (x,y,w,h) in face:
                             image_crop = image[y:h, x:w]
                             image_crop = imgutils.resize(image_crop, 64, 64)
@@ -204,7 +204,7 @@ class FaceRecognizer(object):
         confs = []
         
         if search_for_faces:
-            (faces, image) = imgutils.detect(image, self.cascade_face, (64,64))
+            (faces, image) = imgutils.detect_pattern(image, self.cascade_face, (64,64))
             if len(faces) > 0:
                 for (x, y, w, h) in faces:
                     name = ""
