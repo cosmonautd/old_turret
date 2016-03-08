@@ -28,7 +28,7 @@ def detect_pattern(img, cascade, min_rectangle):
         
     """
 
-    rects = cascade.detectMultiScale(img, 1.2, 3, cv2.cv.CV_HAAR_DO_CANNY_PRUNING, min_rectangle)
+    rects = cascade.detectMultiScale(img, 1.2, 3, 1, min_rectangle)
 
     if len(rects) == 0:
         return [], img
