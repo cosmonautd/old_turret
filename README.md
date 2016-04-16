@@ -61,4 +61,4 @@ To use this project the following needs to be installed:
    
 
 
-Note: This code has been tested in Ubuntu 14.04, Python 2.7.5 and OpenCV 2.4.8
+Note: This code has been tested in Ubuntu 14.04, Python 2.7.5 and OpenCV 3.0.0
